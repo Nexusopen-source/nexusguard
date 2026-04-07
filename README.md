@@ -80,8 +80,11 @@ Included in `src/lib/scenarios/seed.ts`:
 - `POST /api/auth/login` → start session with operator/viewer credentials
 - `POST /api/auth/logout` → clear session
 - `GET /api/auth/session` → current auth session status
+- `POST /api/auth/refresh` → rotate/refresh active auth session cookie
 - `GET /api/policy` → read active policy config
 - `POST /api/policy` → update active policy config (operator only)
+- `GET /api/policy/history` → list policy versions (operator only)
+- `POST /api/policy/rollback` → rollback to a specific policy version (operator only)
 - `GET /api/metrics` → in-memory API metrics snapshot (operator only)
   - `?format=prometheus` for Prometheus text output
 - `GET /api/audit/export` → audit export endpoint (role controlled)
@@ -140,6 +143,9 @@ NEXUSGUARD_OPERATOR_EMAIL=operator@nexusguard.local
 NEXUSGUARD_OPERATOR_PASSWORD=
 NEXUSGUARD_VIEWER_EMAIL=viewer@nexusguard.local
 NEXUSGUARD_VIEWER_PASSWORD=
+NEXUSGUARD_MFA_CODE=
+NEXUSGUARD_AUTH_MAX_ATTEMPTS=5
+NEXUSGUARD_AUTH_LOCK_MINUTES=10
 NEXT_PUBLIC_STELLAR_DESTINATION=
 ```
 
@@ -199,6 +205,17 @@ Global HTTP hardening headers are applied via `src/proxy.ts`:
   - `POST /api/decision`
   - `GET/POST /api/policy`
   - `POST /api/stellar/submit-signed`
+
+## Auth Hardening
+
+- Brute-force lockout via in-memory attempt tracking (`src/lib/auth/login-lockout.ts`)
+- Optional MFA code gate with `NEXUSGUARD_MFA_CODE`
+- Sliding-style session refresh via `POST /api/auth/refresh`
+
+## Policy Versioning
+
+- Policy updates now store versioned history in `.nexusguard/policy-history.json`
+- Operator can list history (`GET /api/policy/history`) and rollback (`POST /api/policy/rollback`)
 
 ## Hackathon Demo Narrative (2 minutes)
 1. Open overview: show wallet + active policies.
