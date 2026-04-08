@@ -158,6 +158,8 @@ STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
 DATABASE_URL=
 DATABASE_SSL=false
 
+NEXUSGUARD_STORE_DIR=
+
 NEXUSGUARD_SHARED_STATE_PATH=
 
 GROQ_API_KEY=
@@ -261,7 +263,14 @@ Stores include:
 - `user-wallet-store`
 
 If `DATABASE_URL` is available and healthy, Postgres is used.
-Otherwise NexusGuard falls back to `.nexusguard/*.json` files.
+Otherwise NexusGuard falls back to local JSON files:
+- local/dev default: `.nexusguard/*.json`
+- Vercel default: `/tmp/nexusguard/*.json`
+
+Optional overrides:
+- `NEXUSGUARD_STORE_DIR` to set file-store directory explicitly
+- `NEXUSGUARD_SHARED_STATE_PATH` for shared lockout/rate-limit state file path
+  - use an absolute path on Vercel (example: `/tmp/nexusguard/shared-security-state.json`)
 
 ### Versioned Migrations
 

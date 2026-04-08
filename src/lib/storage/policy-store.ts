@@ -1,13 +1,12 @@
 import { promises as fs } from "node:fs";
-import path from "node:path";
 
 import { defaultPolicyConfig } from "@/lib/policy/engine";
 import { runWithDatabase } from "@/lib/storage/db";
+import { getNexusGuardStoreDir, getNexusGuardStorePath } from "@/lib/storage/paths";
 import type { PolicyConfig } from "@/lib/types/domain";
 
-const storeDir = path.join(process.cwd(), ".nexusguard");
-const storePath = path.join(storeDir, "policy.json");
-const historyPath = path.join(storeDir, "policy-history.json");
+const storePath = getNexusGuardStorePath("policy.json");
+const historyPath = getNexusGuardStorePath("policy-history.json");
 
 type PolicyStoreFile = {
   policy: PolicyConfig;
@@ -27,7 +26,7 @@ type PolicyHistoryFile = {
 };
 
 async function ensureStore() {
-  await fs.mkdir(storeDir, { recursive: true });
+  await fs.mkdir(getNexusGuardStoreDir(), { recursive: true });
   try {
     await fs.access(storePath);
   } catch {

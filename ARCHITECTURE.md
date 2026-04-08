@@ -49,7 +49,7 @@ flowchart LR
   AUD --> DB
   AUTH --> DB
 
-  POL --> FILE[.nexusguard/*.json fallback]
+  POL --> FILE[JSON fallback\nlocal .nexusguard / Vercel /tmp/nexusguard]
   AUD --> FILE
   AUTH --> FILE
 
@@ -251,7 +251,10 @@ erDiagram
 ### 6.2 DB-first fallback behavior
 
 - If `DATABASE_URL` is set and DB is reachable: uses Postgres tables.
-- On DB unavailability or operation failure: falls back to local JSON files in `.nexusguard/`.
+- On DB unavailability or operation failure: falls back to local JSON files.
+  - local/dev default: `.nexusguard/`
+  - Vercel default: `/tmp/nexusguard/`
+  - optional override: `NEXUSGUARD_STORE_DIR`
 
 This fallback is intentional for local resilience, but introduces consistency tradeoffs in multi-instance deployments.
 
