@@ -1,5 +1,11 @@
 # NexusGuard
 
+<p align="center">
+  <img src="public/nexusguard-logo.svg" alt="NexusGuard logo" width="120" />
+</p>
+
+<p align="center"><strong>Policy-Controlled Payment Firewall for Autonomous Agent Actions on Stellar</strong></p>
+
 NexusGuard is a **policy-controlled payment firewall for autonomous agent actions on Stellar**.
 It sits between agent intent and economic execution, applies governance/risk checks, and keeps an auditable decision trail.
 
