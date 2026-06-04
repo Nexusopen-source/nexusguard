@@ -161,6 +161,7 @@ DATABASE_SSL=false
 NEXUSGUARD_STORE_DIR=
 
 NEXUSGUARD_SHARED_STATE_PATH=
+REDIS_URL=
 
 GROQ_API_KEY=
 GROQ_MODEL=llama-3.3-70b-versatile
@@ -273,6 +274,8 @@ Optional overrides:
 - `NEXUSGUARD_STORE_DIR` to set file-store directory explicitly
 - `NEXUSGUARD_SHARED_STATE_PATH` for shared lockout/rate-limit state file path
   - use an absolute path on Vercel (example: `/tmp/nexusguard/shared-security-state.json`)
+- `REDIS_URL` for multi-instance deployments (e.g. Vercel)
+  - uses a Redis-backed adapter with automatic, transparent fallback to the file store if Redis is unreachable or unconfigured.
 
 ### Versioned Migrations
 
@@ -298,7 +301,7 @@ Optional overrides:
 
 ## 16) 🧪 Known Limitations (Current)
 
-1. Shared security state is file-based (not distributed locking like Redis).
+1. Shared security state supports Redis distributed locking, but defaults to file-based for local development.
 2. Risk scoring remains heuristic-heavy (no external threat-intel integration).
 3. Stellar workflow is testnet-oriented.
 4. Server-side signing remains intentionally disabled.
@@ -310,7 +313,6 @@ NexusGuard is intentionally optimized for hackathon clarity and wallet-native co
 
 ## 17) 🛣️ Practical Next Steps
 
-- Introduce distributed shared state backend (Redis).
 - Add stronger risk intelligence + anomaly detection.
 - Expand end-to-end payment verification and automated lifecycle tests.
 
