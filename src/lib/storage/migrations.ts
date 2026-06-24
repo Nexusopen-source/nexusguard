@@ -48,4 +48,15 @@ export const STORAGE_MIGRATIONS: SqlMigration[] = [
       );
     `,
   },
+  {
+    id: "002_audit_hash_chain",
+    sql: `
+      ALTER TABLE nexusguard_audit_entries
+        ADD COLUMN IF NOT EXISTS entry_hash TEXT;
+
+      CREATE INDEX IF NOT EXISTS nexusguard_audit_entries_entry_hash_idx
+        ON nexusguard_audit_entries (entry_hash)
+        WHERE entry_hash IS NOT NULL;
+    `,
+  },
 ];
