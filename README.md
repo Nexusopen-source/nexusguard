@@ -245,6 +245,7 @@ NEXUSGUARD_OPERATOR_WALLETS=
 NEXUSGUARD_VIEWER_WALLETS=
 NEXUSGUARD_AUTH_MAX_ATTEMPTS=5
 NEXUSGUARD_AUTH_LOCK_MINUTES=10
+NEXUSGUARD_JSON_BODY_MAX_BYTES=65536
 
 NEXT_PUBLIC_STELLAR_DESTINATION=
 
@@ -272,6 +273,8 @@ npm run db:migrate
 ---
 
 ## 11) 🔌 API Surface (Reference)
+
+JSON `POST` routes that accept request bodies enforce a shared size limit before parsing (default **64 KiB**, override with `NEXUSGUARD_JSON_BODY_MAX_BYTES`). Oversized payloads receive HTTP **413** with a clear error message; malformed but small JSON still returns the route's normal validation error.
 
 ### Auth
 - `POST /api/auth/challenge`
