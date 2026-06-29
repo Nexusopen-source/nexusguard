@@ -72,4 +72,11 @@ export const STORAGE_MIGRATIONS: SqlMigration[] = [
       );
     `,
   },
+  {
+    id: "004_wallet_expiration",
+    sql: `
+      ALTER TABLE nexusguard_wallets
+        ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;
+    `,
+  },
 ];

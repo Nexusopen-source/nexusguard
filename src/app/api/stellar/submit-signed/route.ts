@@ -13,6 +13,7 @@ import {
   maybeRunCleanup,
   putIdempotencyRecord,
 } from "@/lib/storage/submit-idempotency-store";
+import { getUserWallet } from "@/lib/storage/user-wallet-store";
 import { stellarSubmitSignedRequestSchema } from "@/lib/validation/schemas";
 import { normalizeHorizonError, HorizonErrorCategory } from "@/lib/utils/horizonErrors";
 
@@ -134,6 +135,18 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = auth.session.userId;
+    const assignedWallet = await getUserWallet(userId);
+
+    if (assignedWallet && "expired" in assignedWallet) {
+      logWarn("Submit signed wallet expired", { ...context, userId });
+      return jsonWithRequestContext(request, {
+        route: "/api/stellar/submit-signed",
+        startedAtMs,
+        status: 401,
+        body: { error: "Session wallet mapping has expired." },
+        headers: rateLimitHeaders(rate),
+      });
+    }
 
     const bodyResult = await readJsonBody(request);
     if (!bodyResult.ok) {
