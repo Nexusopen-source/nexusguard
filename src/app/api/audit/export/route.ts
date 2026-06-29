@@ -115,11 +115,12 @@ export async function GET(request: NextRequest) {
       }
 
       logInfo("Audit export success (all/csv)", { ...context, userId: auth.session.userId });
+      const filenameAll = `nexusguard-audit-all-${new Date().toISOString().slice(0, 10)}.csv`;
       return new NextResponse(toCsv(rows), {
         status: 200,
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": "attachment; filename=nexusguard-audit-all.csv",
+          "Content-Disposition": `attachment; filename=${filenameAll}`,
           "x-request-id": request.headers.get("x-request-id") ?? crypto.randomUUID(),
         },
       });
@@ -156,11 +157,12 @@ export async function GET(request: NextRequest) {
     }));
 
     logInfo("Audit export success (mine/csv)", { ...context, userId: auth.session.userId });
+    const filenameMine = `nexusguard-audit-mine-${new Date().toISOString().slice(0, 10)}.csv`;
     return new NextResponse(toCsv(rows), {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": "attachment; filename=nexusguard-audit-mine.csv",
+        "Content-Disposition": `attachment; filename=${filenameMine}`,
         "x-request-id": request.headers.get("x-request-id") ?? crypto.randomUUID(),
       },
     });
