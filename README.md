@@ -262,38 +262,24 @@ To clean up local developer state safely, you can use the local demo reset utili
 
 ## 9) 🌍 Environment Variables
 
-Reference (`.env.example`):
+All configuration is documented in [`.env.example`](.env.example). Copy it to `.env.local` and fill in the values you need:
 
 ```bash
-STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
-# Optional; defaults to testnet passphrase. Must agree with STELLAR_HORIZON_URL.
-STELLAR_NETWORK_PASSPHRASE=
-
-DATABASE_URL=
-DATABASE_SSL=false
-
-NEXUSGUARD_STORE_DIR=
-
-NEXUSGUARD_SHARED_STATE_PATH=
-REDIS_URL=
-
-GROQ_API_KEY=
-GROQ_MODEL=llama-3.3-70b-versatile
-
-NEXUSGUARD_AUTH_SECRET=
-NEXUSGUARD_OPERATOR_WALLETS=
-NEXUSGUARD_VIEWER_WALLETS=
-NEXUSGUARD_AUTH_MAX_ATTEMPTS=5
-NEXUSGUARD_AUTH_LOCK_MINUTES=10
-NEXUSGUARD_JSON_BODY_MAX_BYTES=65536
-
-NEXT_PUBLIC_STELLAR_DESTINATION=
-
-# Optional external blocklist URL for dynamic threat-intel
-# Accepts JSON array of domains or plain-text (one domain per line, # comments ignored)
-# Cached in-memory for 5 minutes; feed failures fall back silently
-NEXUSGUARD_BLOCKLIST_URL=
+cp .env.example .env.local
 ```
+
+The file covers every variable used by the app, organized into:
+
+| Category | Variables |
+|---|---|
+| **Stellar Network** | `STELLAR_HORIZON_URL`, `STELLAR_NETWORK_PASSPHRASE`, `NEXT_PUBLIC_STELLAR_DESTINATION` |
+| **Auth** | `NEXUSGUARD_AUTH_SECRET`, `NEXUSGUARD_OPERATOR_WALLETS`, `NEXUSGUARD_VIEWER_WALLETS`, `NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS`, `NEXUSGUARD_AUTH_MAX_ATTEMPTS`, `NEXUSGUARD_AUTH_LOCK_MINUTES` |
+| **Storage** | `DATABASE_URL`, `DATABASE_SSL`, `NEXUSGUARD_STORE_DIR` |
+| **Shared State** | `NEXUSGUARD_SHARED_STATE_PATH`, `REDIS_URL` |
+| **Idempotency** | `NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS` |
+| **Optional Integrations** | `GROQ_API_KEY`, `GROQ_MODEL`, `NEXUSGUARD_BLOCKLIST_URL` |
+| **Request Handling** | `NEXUSGUARD_JSON_BODY_MAX_BYTES` |
+| **Dev Utilities** | `NEXUSGUARD_ALLOW_LOCAL_RESET` |
 
 ---
 
