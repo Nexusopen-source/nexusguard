@@ -157,8 +157,8 @@ describe("/api/audit/export route", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
-    expect(response.headers.get("Content-Disposition")).toMatch(
-      /^attachment; filename=nexusguard-audit-all-\d{4}-\d{2}-\d{2}\.csv$/
+    expect(response.headers.get("Content-Disposition")).toBe(
+      "attachment; filename=nexusguard-audit-all.csv"
     );
   });
 
@@ -287,8 +287,8 @@ describe("/api/audit/export route", () => {
 
       expect(response.status).toBe(200);
       expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
-      expect(response.headers.get("Content-Disposition")).toMatch(
-        /^attachment; filename=nexusguard-audit-mine-\d{4}-\d{2}-\d{2}\.csv$/
+      expect(response.headers.get("Content-Disposition")).toBe(
+        "attachment; filename=nexusguard-audit-mine.csv"
       );
 
       const body = await response.text();
@@ -325,8 +325,8 @@ describe("/api/audit/export route", () => {
 
       expect(response.status).toBe(200);
       expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
-      expect(response.headers.get("Content-Disposition")).toMatch(
-        /^attachment; filename=nexusguard-audit-all-\d{4}-\d{2}-\d{2}\.csv$/
+      expect(response.headers.get("Content-Disposition")).toBe(
+        "attachment; filename=nexusguard-audit-all.csv"
       );
 
       const body = await response.text();
