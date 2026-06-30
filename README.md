@@ -242,25 +242,83 @@ Open: `http://localhost:3000`
 
 ### Resetting Local Demo State
 
-To clean up local developer state safely, you can use the local demo reset utility. This script is strictly for local environments and implements guardrails to prevent accidental cleanup of production/non-local databases.
+To clean up local developer state safely, use the built-in reset utility (`scripts/reset-local-demo-state.ts`). The script is strictly for local environments and enforces guardrails to prevent accidental destruction of non-local data.
 
 #### Guardrails
-- **Local Database Check**: Inspects `DATABASE_URL` and blocks execution if the hostname is not local (`localhost`, `127.0.0.1`, `::1`, or local UNIX sockets).
-- **Explicit Confirmation**: Rejects execution unless **both** the environment variable `NEXUSGUARD_ALLOW_LOCAL_RESET=true` and CLI flag `--yes` are provided.
+
+- **Local Database Check**: Inspects `DATABASE_URL` and blocks execution if the hostname is not `localhost`, `127.0.0.1`, `::1`, or a local UNIX socket.
+- **Local Redis Check**: Skips Redis cleanup entirely when `REDIS_URL` points to a non-local host.
+- **Explicit Confirmation**: Runs in dry-run mode unless **both** `NEXUSGUARD_ALLOW_LOCAL_RESET=true` (env var) and `--yes` (CLI flag) are provided together.
 
 #### Usage
 
-* **Dry-Run (Default)**: Inspect what files and databases would be cleared without modifying any data.
+* **Dry-Run (Default)** — preview what would be cleared without touching any data:
   ```bash
   npm run demo:reset
   ```
   *(or `npx tsx scripts/reset-local-demo-state.ts`)*
 
-* **Apply Reset**: Execute the state reset once all guardrails are met.
+* **Apply Reset** — execute once both guardrails are satisfied:
   ```bash
   NEXUSGUARD_ALLOW_LOCAL_RESET=true npm run demo:reset -- --yes
   ```
   *(or `NEXUSGUARD_ALLOW_LOCAL_RESET=true npx tsx scripts/reset-local-demo-state.ts --yes`)*
+
+#### What Gets Cleared
+
+**JSON store files** (inside `NEXUSGUARD_STORE_DIR`, default `.nexusguard/`):
+
+| File | Contents |
+|---|---|
+| `audit.json` | Audit log entries |
+| `policy.json` | Active policy configuration |
+| `policy-history.json` | Policy change history |
+| `submit-idempotency.json` | Payment idempotency cache |
+| `wallets.json` | Wallet registrations |
+| `NEXUSGUARD_SHARED_STATE_PATH` | Shared-state file (if configured) |
+
+**Database tables** (only when `DATABASE_URL` is set to a local host):
+
+| Table | Contents |
+|---|---|
+| `nexusguard_wallets` | Wallet registrations |
+| `nexusguard_audit_entries` | Audit log entries |
+| `nexusguard_usage` | Usage tracking records |
+| `nexusguard_policy_state` | Active policy state |
+| `nexusguard_policy_history` | Policy change history |
+| `nexusguard_submit_idempotency` | Payment idempotency records |
+
+Tables are truncated with `RESTART IDENTITY CASCADE`.
+
+**Redis keys** (only when `REDIS_URL` points to a local host):
+- All keys matching `nexusguard:*` are deleted.
+
+#### What Gets Re-seeded
+
+After clearing, the script re-inserts the **default policy configuration at version 1** into both `nexusguard_policy_state` and `nexusguard_policy_history`. The app starts in a known, valid policy state immediately — no manual re-seed required.
+
+#### What Is NOT Cleared
+
+- `.env.local` and all environment variables
+- Database schema and migrations
+- `node_modules` and build artifacts
+- Any files outside `NEXUSGUARD_STORE_DIR`
+
+#### Recommended Workflow
+
+```bash
+# 1. Preview what will be affected (safe — no changes made)
+npm run demo:reset
+
+# 2. Apply the reset
+NEXUSGUARD_ALLOW_LOCAL_RESET=true npm run demo:reset -- --yes
+
+# 3. Optionally reload fresh demo scenarios
+npm run demo:scenarios
+
+# 4. Restart the dev server — default state is regenerated on startup
+npm run dev
+```
 
 ---
 
