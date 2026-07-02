@@ -146,6 +146,8 @@ Before committing a policy change, operators can dry-run the unsaved draft from 
 
 Simulation is strictly read-only: it never saves the policy and never consumes usage. Saving still happens only through `POST /api/policy`. See `src/lib/decision/simulate.ts` and `POST /api/policy/simulate`.
 
+> **Reporting API failures:** Include the `x-request-id` header value from the response (or the `requestId` field from server-side logs) when filing a bug report. See [docs/observability.md](docs/observability.md#reporting-api-failures) for details.
+
 ### 6.2 Signed XDR Payment Path
 
 1. Evaluate action in `/console` with a **payment quote** (`paymentQuoteInput`: destination, optional memo, network). On `APPROVE`/`WARN`, NexusGuard stores an immutable `paymentQuote` on the audit entry.
@@ -164,6 +166,7 @@ The policy decision authorizes a fixed payment quote (destination, amount, asset
 |---|---|---|
 | Missing/invalid body (`auditEntryId`, schema) | `400` | `Invalid payment build request.` + zod details |
 | Unknown audit entry or non-executable decision | `403` | `No authorized payment decision found…` / `Decision 'BLOCK' does not authorize…` |
+| Quote older than `NEXUSGUARD_PAYMENT_QUOTE_TTL_SECONDS` (default 300 s) | `403` | `Payment quote has expired. Please re-evaluate the action.` |
 | Tampered destination, amount, asset, or memo | `403` | `{ error, field }` naming the mismatched field |
 | Valid approved request | `200` | `{ ok: true, xdr, networkPassphrase, … }` |
 
@@ -182,6 +185,10 @@ Additional behavior:
 - Decisions are appended to audit store at evaluation time.
 - `/activity` reads entries by authenticated session user id.
 - Export endpoint supports `mine` and `all` scopes in JSON/CSV.
+
+### Timestamp timezone
+
+All audit timestamps are recorded and exported in **UTC** (ISO 8601 format with a `Z` suffix, e.g. `2025-06-01T12:00:00.000Z`). This applies to both JSON and CSV exports — the `timestamp` column in CSV output carries the raw UTC string with no local-time conversion. The `from`/`to` query parameters on the export endpoint are also compared against these UTC timestamps, so any filter dates should be expressed in UTC.
 
 ### Hash chain integrity
 
@@ -236,91 +243,110 @@ Open: `http://localhost:3000`
 
 ### Resetting Local Demo State
 
-To clean up local developer state safely, you can use the local demo reset utility. This script is strictly for local environments and implements guardrails to prevent accidental cleanup of production/non-local databases.
+To clean up local developer state safely, use the built-in reset utility (`scripts/reset-local-demo-state.ts`). The script is strictly for local environments and enforces guardrails to prevent accidental destruction of non-local data.
 
 #### Guardrails
-- **Local Database Check**: Inspects `DATABASE_URL` and blocks execution if the hostname is not local (`localhost`, `127.0.0.1`, `::1`, or local UNIX sockets).
-- **Explicit Confirmation**: Rejects execution unless **both** the environment variable `NEXUSGUARD_ALLOW_LOCAL_RESET=true` and CLI flag `--yes` are provided.
+
+- **Local Database Check**: Inspects `DATABASE_URL` and blocks execution if the hostname is not `localhost`, `127.0.0.1`, `::1`, or a local UNIX socket.
+- **Local Redis Check**: Skips Redis cleanup entirely when `REDIS_URL` points to a non-local host.
+- **Explicit Confirmation**: Runs in dry-run mode unless **both** `NEXUSGUARD_ALLOW_LOCAL_RESET=true` (env var) and `--yes` (CLI flag) are provided together.
 
 #### Usage
 
-* **Dry-Run (Default)**: Inspect what files and databases would be cleared without modifying any data.
+* **Dry-Run (Default)** — preview what would be cleared without touching any data:
   ```bash
   npm run demo:reset
   ```
   *(or `npx tsx scripts/reset-local-demo-state.ts`)*
 
-* **Apply Reset**: Execute the state reset once all guardrails are met.
+* **Apply Reset** — execute once both guardrails are satisfied:
   ```bash
   NEXUSGUARD_ALLOW_LOCAL_RESET=true npm run demo:reset -- --yes
   ```
   *(or `NEXUSGUARD_ALLOW_LOCAL_RESET=true npx tsx scripts/reset-local-demo-state.ts --yes`)*
 
+#### What Gets Cleared
+
+**JSON store files** (inside `NEXUSGUARD_STORE_DIR`, default `.nexusguard/`):
+
+| File | Contents |
+|---|---|
+| `audit.json` | Audit log entries |
+| `policy.json` | Active policy configuration |
+| `policy-history.json` | Policy change history |
+| `submit-idempotency.json` | Payment idempotency cache |
+| `wallets.json` | Wallet registrations |
+| `NEXUSGUARD_SHARED_STATE_PATH` | Shared-state file (if configured) |
+
+**Database tables** (only when `DATABASE_URL` is set to a local host):
+
+| Table | Contents |
+|---|---|
+| `nexusguard_wallets` | Wallet registrations |
+| `nexusguard_audit_entries` | Audit log entries |
+| `nexusguard_usage` | Usage tracking records |
+| `nexusguard_policy_state` | Active policy state |
+| `nexusguard_policy_history` | Policy change history |
+| `nexusguard_submit_idempotency` | Payment idempotency records |
+
+Tables are truncated with `RESTART IDENTITY CASCADE`.
+
+**Redis keys** (only when `REDIS_URL` points to a local host):
+- All keys matching `nexusguard:*` are deleted.
+
+#### What Gets Re-seeded
+
+After clearing, the script re-inserts the **default policy configuration at version 1** into both `nexusguard_policy_state` and `nexusguard_policy_history`. The app starts in a known, valid policy state immediately — no manual re-seed required.
+
+#### What Is NOT Cleared
+
+- `.env.local` and all environment variables
+- Database schema and migrations
+- `node_modules` and build artifacts
+- Any files outside `NEXUSGUARD_STORE_DIR`
+
+#### Recommended Workflow
+
+```bash
+# 1. Preview what will be affected (safe — no changes made)
+npm run demo:reset
+
+# 2. Apply the reset
+NEXUSGUARD_ALLOW_LOCAL_RESET=true npm run demo:reset -- --yes
+
+# 3. Optionally reload fresh demo scenarios
+npm run demo:scenarios
+
+# 4. Restart the dev server — default state is regenerated on startup
+npm run dev
+```
+
 ---
 
 ## 9) 🌍 Environment Variables
 
-NexusGuard reads its runtime configuration from environment variables. Use the table below as a quick reference when setting up locally; the code block after it is the actual `.env.example` you copy into `.env.local`.
-
-| Variable | Purpose | Required? | Safe local default |
-| --- | --- | --- | --- |
-| `NEXUSGUARD_AUTH_SECRET` | HMAC key used to sign the `nexusguard_session` cookie and verify wallet-login challenges. Without it, login cannot succeed. | **Required** | _none — generate your own, e.g._ `openssl rand -hex 32` |
-| `STELLAR_HORIZON_URL` | Stellar Horizon endpoint used for balance, fee, and submit calls. | Optional | `https://horizon-testnet.stellar.org` |
-| `STELLAR_NETWORK_PASSPHRASE` | Network passphrase Horizon URLs resolve against (must agree with `STELLAR_HORIZON_URL`). | Optional | _unset — falls back to `Networks.TESTNET` from `@stellar/stellar-sdk`_ |
-| `DATABASE_URL` | Postgres connection string for the DB-backed stores (audit, policy, wallets, idempotency). | Optional | _unset — falls back to the file store at `NEXUSGUARD_STORE_DIR`_ |
-| `DATABASE_SSL` | Enables TLS when connecting to Postgres. | Optional | `false` |
-| `NEXUSGUARD_STORE_DIR` | Directory used by the file-store fallback for all persistence. | Optional | `./.nexusguard` locally · `/tmp/nexusguard` on Vercel |
-| `NEXUSGUARD_SHARED_STATE_PATH` | File path for shared lockout/rate-limit state (must be writable on multi-instance deployments). | Optional | `NEXUSGUARD_STORE_DIR/shared-security-state.json` locally · `/tmp/nexusguard/...` on Vercel |
-| `REDIS_URL` | Redis URL for distributed lockout/rate-limit across instances. | Optional | _unset — file-based state is used_ |
-| `GROQ_API_KEY` | API key for Groq (used by `POST /api/agent/plan`). | Optional¹ | _unset — every flow except agent plan works without it_ |
-| `GROQ_MODEL` | Groq model identifier used by agent plan. | Optional | `llama-3.3-70b-versatile` |
-| `NEXUSGUARD_OPERATOR_WALLETS` | Comma-separated public keys (`G…`) granted the `operator` role. | Optional | _unset — when both allowlists are empty, every authenticated wallet is treated as `operator` (recommended only for local/dev)_ |
-| `NEXUSGUARD_VIEWER_WALLETS` | Comma-separated public keys (`G…`) granted the `viewer` role. | Optional | _unset (no viewer)_ |
-| `NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS` | Lifetime of wallet-login challenges. | Optional | `300` |
-| `NEXUSGUARD_AUTH_MAX_ATTEMPTS` | Failed login attempts before lockout. | Optional | `5` |
-| `NEXUSGUARD_AUTH_LOCK_MINUTES` | Lockout window in minutes. | Optional | `10` |
-| `NEXUSGUARD_JSON_BODY_MAX_BYTES` | Maximum request body size for JSON `POST` routes (returns `413` above this). | Optional | `65536` (64 KiB) |
-| `NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS` | Retention window in days for submit-idempotency records. | Optional | `7` |
-| `NEXUSGUARD_BLOCKLIST_URL` | External dynamic threat-intel blocklist URL (JSON array or `#`-commented text; 5-min in-memory cache). | Optional | _unset — analyzer uses the built-in blocklist only_ |
-| `NEXUSGUARD_ALLOW_LOCAL_RESET` | Must be set to `true` (together with `npm run demo:reset -- --yes`) to wipe local demo state. Acts as a safety gate. | Optional (gate) | _unset — `demo:reset` runs as a dry-run only_ |
-| `NEXT_PUBLIC_STELLAR_DESTINATION` | Default destination prefill shown in `/console` for the demo payment quote. | Optional | _empty_ |
-
-¹ `GROQ_API_KEY` is only required if you call `POST /api/agent/plan`; the decision, policy, audit, and payment flows run without it.
-
-> **Security:** never commit real secrets. Keep dev values in `.env.local` (gitignored), leave placeholders in `.env.example`, and use your deployment platform's secret manager for production values.
-
-Reference (`.env.example`):
+All configuration is documented in [`.env.example`](.env.example). Copy it to `.env.local` and fill in the values you need:
 
 ```bash
-STELLAR_HORIZON_URL=https://horizon-testnet.stellar.org
-# Optional; defaults to testnet passphrase. Must agree with STELLAR_HORIZON_URL.
-STELLAR_NETWORK_PASSPHRASE=
-
-DATABASE_URL=
-DATABASE_SSL=false
-
-NEXUSGUARD_STORE_DIR=
-
-NEXUSGUARD_SHARED_STATE_PATH=
-REDIS_URL=
-
-GROQ_API_KEY=
-GROQ_MODEL=llama-3.3-70b-versatile
-
-NEXUSGUARD_AUTH_SECRET=
-NEXUSGUARD_OPERATOR_WALLETS=
-NEXUSGUARD_VIEWER_WALLETS=
-NEXUSGUARD_AUTH_MAX_ATTEMPTS=5
-NEXUSGUARD_AUTH_LOCK_MINUTES=10
-NEXUSGUARD_JSON_BODY_MAX_BYTES=65536
-
-NEXT_PUBLIC_STELLAR_DESTINATION=
-
-# Optional external blocklist URL for dynamic threat-intel
-# Accepts JSON array of domains or plain-text (one domain per line, # comments ignored)
-# Cached in-memory for 5 minutes; feed failures fall back silently
-NEXUSGUARD_BLOCKLIST_URL=
+cp .env.example .env.local
 ```
+
+The file covers every variable used by the app, organized into:
+
+| Category | Variables |
+|---|---|
+| **Stellar Network** | `STELLAR_HORIZON_URL`, `STELLAR_NETWORK_PASSPHRASE`, `NEXT_PUBLIC_STELLAR_DESTINATION`, `NEXUSGUARD_PAYMENT_QUOTE_TTL_SECONDS` |
+| **Auth** | `NEXUSGUARD_AUTH_SECRET`, `NEXUSGUARD_OPERATOR_WALLETS`, `NEXUSGUARD_VIEWER_WALLETS`, `NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS`, `NEXUSGUARD_AUTH_MAX_ATTEMPTS`, `NEXUSGUARD_AUTH_LOCK_MINUTES` |
+| **Storage** | `DATABASE_URL`, `DATABASE_SSL`, `NEXUSGUARD_STORE_DIR` |
+| **Shared State** | `NEXUSGUARD_SHARED_STATE_PATH`, `REDIS_URL` |
+| **Idempotency** | `NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS` |
+| **Optional Integrations** | `GROQ_API_KEY`, `GROQ_MODEL`, `NEXUSGUARD_BLOCKLIST_URL` |
+| **Request Handling** | `NEXUSGUARD_JSON_BODY_MAX_BYTES` |
+| **Dev Utilities** | `NEXUSGUARD_ALLOW_LOCAL_RESET` |
+
+> [!IMPORTANT]
+> **Stellar Network Configuration Pairing:**
+> `STELLAR_HORIZON_URL` and `STELLAR_NETWORK_PASSPHRASE` are paired settings and must always be configured together. When switching between local development and Stellar testnet, ensure both values are updated in tandem. Mismatched values can cause confusing failures (e.g., submitting transactions to one Horizon instance while signing for another network). In production, ensure both are set to the correct production values.
 
 ---
 
@@ -397,6 +423,8 @@ JSON `POST` routes that accept request bodies enforce a shared size limit before
 - `POST /api/stellar/submit-signed` (supports `Idempotency-Key` header/body for safe UI retries)
 - `POST /api/stellar/pay` (legacy disabled)
 - `POST /api/stellar/fund` (removed behavior, returns `410`)
+
+> **Note:** Newly created Stellar testnet wallets start with zero balance. Unfunded wallets cannot perform balance queries, payment flows, or other wallet operations. Before testing, fund the wallet using the Stellar testnet friendbot (`GET https://friendbot.stellar.org?addr=YOUR_PUBLIC_KEY`) or the in‑app `/api/stellar/setup` endpoint. This applies only to the testnet; production wallets are funded via standard Stellar distribution channels.
 
 ---
 
@@ -475,7 +503,27 @@ Optional overrides:
 
 ---
 
-## 16) 🧪 Known Limitations (Current)
+## 16) 🛡️ Security Headers
+
+NexusGuard applies baseline security headers to every response (pages and API routes) via `src/middleware.ts`.
+
+| Header | Value | Rationale |
+|---|---|---|
+| `X-Content-Type-Options` | `nosniff` | Prevents MIME-type sniffing — browsers trust the declared `Content-Type` without guessing. |
+| `X-Frame-Options` | `DENY` | Blocks the app from being embedded in `<frame>`, `<iframe>`, or `<object>` — prevents clickjacking. |
+| `Content-Security-Policy` | `default-src 'self'`; + per-resource directives | Restricts resource loading to the origin. Inlines styles are allowed (required by `next/font` and Tailwind). In **development** `script-src` also allows `'unsafe-inline'` and `'unsafe-eval'` for Next.js hot-reload; in **production** only `'self'` scripts are permitted. `frame-ancestors 'none'` and `form-action 'self'` provide additional clickjacking and form-redirect protection. `base-uri 'self'` prevents injected `<base>` tag attacks. |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Disables unused browser capabilities to reduce the attack surface. |
+
+### Development vs. Production
+
+- In `NODE_ENV=development` the CSP `script-src` includes `'unsafe-inline'` and `'unsafe-eval'` because the Next.js dev server injects inline scripts for hot-module reload. The production build strips these, relying on Next.js's hashed/external script strategy.
+- All other directives are identical across environments.
+
+These headers are applied by Next.js Middleware (`src/middleware.ts`), which runs on every request matching `/((?!_next/static|_next/image|favicon.ico|icon.jpg).*)`. The helper function `buildSecurityHeaders()` in `src/lib/security/headers.ts` constructs the header map and is unit-tested independently.
+
+---
+
+## 17) 🧪 Known Limitations (Current)
 
 1. Shared security state supports Redis distributed locking, but defaults to file-based for local development.
 2. Risk scoring remains heuristic-heavy (no external threat-intel integration).
@@ -510,9 +558,7 @@ These snapshots make policy decision transparency reproducible for reviewers and
 
 ---
 
----
-
-## 17) ❓ Troubleshooting Payment Failures
+## 18) ❓ Troubleshooting Payment Failures
 
 Common Stellar Horizon failures during the signed payment flow:
 
@@ -523,13 +569,13 @@ Common Stellar Horizon failures during the signed payment flow:
 
 ---
 
-## 18) 🛣️ Practical Next Steps
+## 19) 🛣️ Practical Next Steps
 
 - Add stronger risk intelligence + anomaly detection.
 - Expand end-to-end payment verification and automated lifecycle tests.
 
 ---
 
-## 19) 📄 License
+## 20) 📄 License
 
 MIT (see `package.json`).
