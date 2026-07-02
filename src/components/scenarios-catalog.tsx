@@ -19,7 +19,7 @@ export function ScenariosCatalog() {
         scenario.description.toLowerCase().includes(query) ||
         scenario.action.target.toLowerCase().includes(query) ||
         scenario.action.domain.toLowerCase().includes(query) ||
-        scenario.action.tool.toLowerCase().includes(query);
+        (scenario.action.tool?.toLowerCase().includes(query) ?? false);
 
       const matchesDecision =
         selectedDecision === "ALL" || scenario.expectedDecision === selectedDecision;
