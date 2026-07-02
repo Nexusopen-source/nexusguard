@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import { POST } from "@/app/api/policy/rollback/preview/route";
 import { AUTH_COOKIE_KEY, createSessionToken } from "@/lib/auth/session";
 import { defaultPolicyConfig } from "@/lib/policy/engine";
-import { getDailyUsage } from "@/lib/storage/audit-store";
+import { getDailyUsage, consumeUsage } from "@/lib/storage/audit-store";
 import { getPolicyConfig, updatePolicyConfig } from "@/lib/storage/policy-store";
 import type { SimulationReport } from "@/lib/decision/simulate";
 
@@ -36,6 +36,8 @@ describe("/api/policy/rollback/preview route", () => {
 
   it("returns rollback impact without mutating policy state", async () => {
     await updatePolicyConfig({ ...defaultPolicyConfig, perTxCapXLM: 250 }, USER_ID);
+    await consumeUsage(USER_ID, 25);
+
     const before = await getPolicyConfig();
     const usageBefore = await getDailyUsage(USER_ID);
 
@@ -65,6 +67,8 @@ describe("/api/policy/rollback/preview route", () => {
     const usageAfter = await getDailyUsage(USER_ID);
     expect(after.version).toBe(before.version);
     expect(after.policy.perTxCapXLM).toBe(before.policy.perTxCapXLM);
-    expect(usageAfter).toEqual(usageBefore);
+    expect(usageAfter.spentXLM).toBe(usageBefore.spentXLM);
+    expect(usageAfter.toolCalls).toBe(usageBefore.toolCalls);
+    expect(usageAfter.lastUpdated).toBe(usageBefore.lastUpdated);
   });
 });

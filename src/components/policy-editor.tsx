@@ -532,7 +532,7 @@ export function PolicyEditor() {
                 labels={{ from: "Current", to: `Rollback v${rollbackPreviewVersion}` }}
               />
               <Button
-                variant="destructive"
+                variant="danger"
                 size="sm"
                 disabled={writeDisabled || loading}
                 onClick={() => confirmRollback(rollbackPreviewVersion)}
