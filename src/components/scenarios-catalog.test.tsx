@@ -87,7 +87,7 @@ describe("ScenariosCatalog Search, Filter, and Empty State", () => {
 
     const gridDiv = element.props.children[1];
     expect(gridDiv.type).toBe("div");
-    
+
     // Check filtered results - should match "Suspicious endpoint attempt" and "Process suspicious tool output"
     const expectedCount = demoScenarios.filter(
       (s) =>
