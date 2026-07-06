@@ -29,6 +29,36 @@ function viewerCookie() {
   return `${AUTH_COOKIE_KEY}=${token}`;
 }
 
+function makePolicyGetRequest(cookie: string) {
+  return new NextRequest("http://localhost/api/policy", {
+    method: "GET",
+    headers: { cookie },
+  });
+}
+
+function makePolicyPostRequest(cookie: string, body: Record<string, unknown>) {
+  return new NextRequest("http://localhost/api/policy", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      cookie,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+const POLICY_PAYLOAD = {
+  allowedDomains: ["api.example.com"],
+  blockedDomains: ["malicious.com"],
+  allowedTools: ["research-pro"],
+  blockedTools: ["shadow-shell"],
+  perTxCapXLM: 150,
+  dailyCapXLM: 300,
+  maxToolCallsPerDay: 10,
+  riskThreshold: 80,
+  allowedHours: { start: 6, end: 23 },
+};
+
 describe("/api/policy route", () => {
   it("returns 401 when unauthenticated", async () => {
     const request = new NextRequest("http://localhost/api/policy", { method: "GET" });
