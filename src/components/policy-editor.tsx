@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { History } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useAuthSession } from "@/lib/auth/use-auth-session";
 import type { SimulationReport, SimulationSource } from "@/lib/decision/simulate";
 import type { DecisionType, PolicyConfig } from "@/lib/types/domain";
+import { PolicyImportExport } from "@/components/policy-import-export";
 
 type PolicyResponse = {
   policy?: PolicyConfig;
@@ -31,6 +33,14 @@ type PolicyHistoryResponse = {
 
 type SimulationResponse = {
   report?: SimulationReport;
+  auditSampled?: number;
+  error?: string;
+};
+
+type RollbackPreviewResponse = {
+  report?: SimulationReport;
+  targetVersion?: number;
+  currentVersion?: number;
   auditSampled?: number;
   error?: string;
 };
@@ -64,6 +74,10 @@ export function PolicyEditor() {
   const [simulating, setSimulating] = useState(false);
   const [simulation, setSimulation] = useState<SimulationReport | null>(null);
   const [simStatus, setSimStatus] = useState<string | null>(null);
+  const [rollbackPreviewVersion, setRollbackPreviewVersion] = useState<number | null>(null);
+  const [rollbackPreview, setRollbackPreview] = useState<SimulationReport | null>(null);
+  const [rollbackPreviewStatus, setRollbackPreviewStatus] = useState<string | null>(null);
+  const [previewingRollback, setPreviewingRollback] = useState(false);
 
   const writeDisabled = loading || sessionLoading || !isOperator;
 
@@ -209,9 +223,61 @@ export function PolicyEditor() {
     }
   }
 
-  async function rollback(versionToRollback: number) {
+  async function previewRollback(versionToPreview: number) {
+    if (!isOperator) {
+      setStatus("Viewer role is read-only. Login as operator to preview rollback.");
+      return;
+    }
+
+    setPreviewingRollback(true);
+    setRollbackPreviewStatus(null);
+    setRollbackPreview(null);
+    setRollbackPreviewVersion(versionToPreview);
+
+    try {
+      const response = await fetch("/api/policy/rollback/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetVersion: versionToPreview, includeAudit }),
+      });
+
+      const payload = (await response.json()) as RollbackPreviewResponse;
+
+      if (!response.ok || payload.error || !payload.report) {
+        setRollbackPreviewVersion(null);
+        setRollbackPreviewStatus(payload.error ?? "Rollback preview failed.");
+        return;
+      }
+
+      setRollbackPreview(payload.report);
+      const { changed, total } = payload.report.summary;
+      const auditNote =
+        includeAudit && (payload.auditSampled ?? 0) === 0
+          ? " No recent audit actions were available to sample."
+          : includeAudit
+            ? ` Included ${payload.auditSampled} recent audit action(s).`
+            : "";
+      setRollbackPreviewStatus(
+        `Preview for v${versionToPreview}: ${changed} of ${total} decision(s) would change. Nothing was saved.${auditNote}`,
+      );
+    } catch (error) {
+      setRollbackPreviewVersion(null);
+      setRollbackPreviewStatus(error instanceof Error ? error.message : "Unexpected rollback preview error.");
+    } finally {
+      setPreviewingRollback(false);
+    }
+  }
+
+  async function confirmRollback(versionToRollback: number) {
     if (!isOperator) {
       setStatus("Viewer role is read-only. Login as operator to rollback policy.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Restore policy version ${versionToRollback}? This creates a new policy version with the historical rules.`,
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -237,10 +303,50 @@ export function PolicyEditor() {
       setBlockedTools(listToText(payload.policy.blockedTools));
       setUpdatedAt(payload.updatedAt ?? null);
       setVersion(payload.version ?? null);
+      setRollbackPreview(null);
+      setRollbackPreviewVersion(null);
+      setRollbackPreviewStatus(null);
       setStatus(`Rollback successful to version ${versionToRollback}.`);
       await loadHistory();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Unexpected rollback error.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleImportPolicy(importedPolicy: PolicyConfig) {
+    if (!isOperator) {
+      setStatus("Viewer role is read-only. Login as operator to import policy.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch("/api/policy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(importedPolicy),
+      });
+
+      const payload = (await response.json()) as PolicyResponse;
+
+      if (!response.ok || payload.error || !payload.policy) {
+        setStatus(payload.error ?? "Failed to save imported policy.");
+        return;
+      }
+
+      setPolicy(payload.policy);
+      setAllowedDomains(listToText(payload.policy.allowedDomains));
+      setBlockedDomains(listToText(payload.policy.blockedDomains));
+      setAllowedTools(listToText(payload.policy.allowedTools));
+      setBlockedTools(listToText(payload.policy.blockedTools));
+      setUpdatedAt(payload.updatedAt ?? null);
+      setVersion(payload.version ?? null);
+      setStatus("Policy imported and saved successfully.");
+      await loadHistory();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Unexpected import error.");
     } finally {
       setLoading(false);
     }
@@ -372,22 +478,48 @@ export function PolicyEditor() {
         </Card>
       </section>
 
+        <PolicyImportExport
+          currentPolicy={policy}
+          onImportApproved={handleImportPolicy}
+          isOperator={isOperator}
+          isLoading={loading || sessionLoading}
+        />
+
       <Card>
         <CardHeader>
           <CardTitle>Policy Version History</CardTitle>
           <CardDescription>
-            Select two versions to compare, or rollback to a prior version.
+            Preview rollback impact before restoring a prior version. Confirmation is required before applying.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          {history.length === 0 ? <p className="text-sm text-[hsl(var(--muted-foreground))]">No history records.</p> : null}
+          {history.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.15)] px-6 py-10 text-center">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[hsl(var(--muted)/0.4)]">
+                <History className="h-5 w-5 text-[hsl(var(--muted-foreground))]" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-[hsl(var(--foreground))]">No version history yet</p>
+                <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                  Saved policy changes will appear here. After your first policy update, each version will be listed for comparison and rollback.
+                </p>
+              </div>
+            </div>
+          ) : null}
           {history.map((entry) => {
             const isA = diffA === entry.version;
             const isB = diffB === entry.version;
             return (
               <div key={entry.version} className="flex items-center justify-between rounded-lg border border-[hsl(var(--border))] p-2 text-sm">
                 <div>
-                  <p className="font-medium">v{entry.version}</p>
+                  <p className="font-medium flex items-center gap-2">
+                    <span>v{entry.version}</span>
+                    {version === entry.version && (
+                      <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-xs font-semibold text-emerald-400">
+                        Active
+                      </span>
+                    )}
+                  </p>
                   <p className="text-[hsl(var(--muted-foreground))]">
                     {entry.updatedAt}
                     {entry.updatedBy ? ` • ${entry.updatedBy}` : ""}
@@ -398,7 +530,8 @@ export function PolicyEditor() {
                     variant={isA ? "default" : "outline"}
                     size="sm"
                     onClick={() => setDiffA(isA ? null : entry.version)}
-                    title="Select as version A for diff"
+                    aria-label={isA ? `Deselect version ${entry.version} as diff baseline (A)` : `Select version ${entry.version} as diff baseline (A)`}
+                    aria-pressed={isA}
                   >
                     A
                   </Button>
@@ -406,22 +539,27 @@ export function PolicyEditor() {
                     variant={isB ? "default" : "outline"}
                     size="sm"
                     onClick={() => setDiffB(isB ? null : entry.version)}
-                    title="Select as version B for diff"
+                    aria-label={isB ? `Deselect version ${entry.version} as diff comparison (B)` : `Select version ${entry.version} as diff comparison (B)`}
+                    aria-pressed={isB}
                   >
                     B
                   </Button>
                   <Button
                     variant="outline"
-                    size="sm"
-                    disabled={writeDisabled || version === entry.version}
-                    onClick={() => rollback(entry.version)}
-                  >
-                    Rollback
+                    size="sm"     >
+                    Preview
                   </Button>
                 </div>
               </div>
             );
           })}
+
+          {history.length > 0 && !history.some((entry) => entry.version !== version) ? (
+            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-2">
+              Rollback is unavailable because no prior policy versions exist.
+            </p>
+          ) : null}
+
 
           {diffA !== null && diffB !== null && diffA !== diffB ? (
             <PolicyDiff
@@ -434,6 +572,32 @@ export function PolicyEditor() {
             <p className="text-sm text-[hsl(var(--muted-foreground))] pt-2">
               Select one more version ({diffA !== null ? "B" : "A"}) to compare.
             </p>
+          ) : null}
+
+          {rollbackPreviewStatus ? (
+            <Alert className="border-[hsl(var(--accent)/0.2)] bg-[hsl(var(--accent)/0.05)]">
+              <AlertTitle>Rollback preview</AlertTitle>
+              <AlertDescription>{rollbackPreviewStatus}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          {previewingRollback ? (
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">Evaluating rollback impact...</p>
+          ) : rollbackPreview && rollbackPreviewVersion !== null ? (
+            <div className="space-y-3">
+              <SimulationPanel
+                report={rollbackPreview}
+                labels={{ from: "Current", to: `Rollback v${rollbackPreviewVersion}` }}
+              />
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={writeDisabled || loading}
+                onClick={() => confirmRollback(rollbackPreviewVersion)}
+              >
+                Confirm rollback to v{rollbackPreviewVersion}
+              </Button>
+            </div>
           ) : null}
         </CardContent>
       </Card>
@@ -498,7 +662,7 @@ export function PolicyEditor() {
 
 type DiffStatus = "added" | "removed" | "unchanged";
 
-function diffLists(a: string[], b: string[]): Array<{ value: string; status: DiffStatus }> {
+export function diffLists(a: string[], b: string[]): Array<{ value: string; status: DiffStatus }> {
   const setA = new Set(a);
   const setB = new Set(b);
   const all = Array.from(new Set([...a, ...b]));
@@ -579,7 +743,13 @@ function DecisionTag({ decision }: { decision: DecisionType }) {
   );
 }
 
-function SimulationPanel({ report }: { report: SimulationReport }) {
+function SimulationPanel({
+  report,
+  labels = { from: "Current", to: "Proposed" },
+}: {
+  report: SimulationReport;
+  labels?: { from: string; to: string };
+}) {
   if (report.cases.length === 0) {
     return (
       <p className="text-sm text-[hsl(var(--muted-foreground))]">
@@ -613,8 +783,10 @@ function SimulationPanel({ report }: { report: SimulationReport }) {
                 <p className="text-xs text-[hsl(var(--muted-foreground))]">{SOURCE_LABEL[entry.source]}</p>
               </div>
               <div className="flex items-center gap-2">
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">{labels.from}</span>
                 <DecisionTag decision={entry.current.decision} />
                 <span className="text-[hsl(var(--muted-foreground))]">→</span>
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">{labels.to}</span>
                 <DecisionTag decision={entry.proposed.decision} />
                 {entry.changed ? (
                   <span className="text-xs font-semibold text-amber-400">changed</span>
