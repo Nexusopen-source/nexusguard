@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 import { defaultPolicyConfig } from "@/lib/policy/engine";
 import type { PolicyConfig } from "@/lib/types/domain";
 import { policyConfigSchema } from "@/lib/validation/schemas";
@@ -54,10 +56,6 @@ export type PolicyParseFailure = {
 
 export type PolicyParseResult = PolicyParseSuccess | PolicyParseFailure;
 
-function fillAllowedHours(): PolicyConfig["allowedHours"] {
-  return defaultPolicyConfig.allowedHours;
-}
-
 /**
  * Documented optional fields with safe defaults.
  *
@@ -66,13 +64,11 @@ function fillAllowedHours(): PolicyConfig["allowedHours"] {
  * potentially intentional or whose default could mask unsafe operator
  * intent — those belong as required fields with strict validation.
  */
-const OPTIONAL_DEFAULTS: Record<string, () => unknown> = {
-  allowedHours: fillAllowedHours,
+const OPTIONAL_DEFAULTS: Record<string, unknown> = {
+  allowedHours: defaultPolicyConfig.allowedHours,
 };
 
-function formatFailure(error: {
-  issues: { path: PropertyKey[]; message: string }[];
-}): PolicyParseFailure {
+function formatFailure(error: z.ZodError): PolicyParseFailure {
   const issues = error.issues.map((issue) => ({
     path: issue.path.map(String).join(".") || "<root>",
     message: issue.message,
@@ -96,9 +92,9 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 /**
  * Decide whether every top-level failing path is a documented optional
  * field that is entirely missing from the raw input. Returns the list of
- * fields we can migrate, or `null` when any issue is non-rectifiable.
+ * fields we can migrate, or `null` when any issue is non-migratable.
  */
-function findRectifiableFields(
+function findMigratableFields(
   raw: Record<string, unknown>,
   paths: Set<string>,
 ): string[] | null {
@@ -111,9 +107,7 @@ function findRectifiableFields(
     fields.push(path);
   }
 
-  // Guard against the empty-issue case to require an explicit migration
-  // decision rather than silently falling through.
-  return fields.length === paths.size && fields.length > 0 ? fields : null;
+  return fields.length > 0 ? fields : null;
 }
 
 export function parseStoredPolicy(raw: unknown): PolicyParseResult {
@@ -133,21 +127,16 @@ export function parseStoredPolicy(raw: unknown): PolicyParseResult {
     }),
   );
 
-  const rectifiable = findRectifiableFields(raw, issuePaths);
-  if (!rectifiable) {
+  const migratableFields = findMigratableFields(raw, issuePaths);
+  if (!migratableFields) {
     return formatFailure(strict.error);
   }
 
   const attempted: Record<string, unknown> = { ...raw };
   const migrations: PolicyMigration[] = [];
 
-  for (const field of rectifiable) {
-    const filler = OPTIONAL_DEFAULTS[field];
-    if (!filler) {
-      return formatFailure(strict.error);
-    }
-
-    attempted[field] = filler();
+  for (const field of migratableFields) {
+    attempted[field] = OPTIONAL_DEFAULTS[field];
     migrations.push({
       field,
       reason: "missing-optional-default",

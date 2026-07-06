@@ -102,7 +102,7 @@ describe("parseStoredPolicy smoke tests", () => {
   });
 
   it("refuses to migrate when missing optionals are mixed with other failures", () => {
-    // allowedHours is missing (rectifiable) but perTxCapXLM is the wrong
+    // allowedHours is missing (migratable) but perTxCapXLM is the wrong
     // type (cannot be migrated). The helper must surface both issues
     // without silently applying the default, preserving the guardrail that
     // migration never weakens strict validation.
