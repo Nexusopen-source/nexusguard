@@ -157,6 +157,43 @@ describe("/api/audit/export route", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
+    expect(response.headers.get("Content-Disposition")).toBe(
+      "attachment; filename=nexusguard-audit-all.csv"
+    );
+  });
+
+  it("redacts entriesByUser on all-scope JSON exports for operators", async () => {
+    const request = new NextRequest(
+      "http://localhost/api/audit/export?format=json&scope=all",
+      {
+        method: "GET",
+        headers: {
+          cookie: operatorCookie(),
+        },
+      }
+    );
+
+    expect(response.status).toBe(200);
+
+    const payload = (await response.json()) as {
+      scope: string;
+      exportedBy: string;
+      entriesByUser: Record<string, Array<Record<string, unknown>>>;
+    };
+
+    expect(payload.scope).toBe("all");
+    expect(payload.exportedBy).toBe("operator-audit-export");
+    expect(typeof payload.entriesByUser).toBe("object");
+
+    // Find any entry whose shape is an object (entries are arrays) and verify
+    // that no entry accidentally leaks a raw signed XDR, bearer-like token, or
+    // session key. We assert via stringified JSON, since redaction swaps the
+    // value for a placeholder object { $redacted: ... }.
+    const serialized = JSON.stringify(payload.entriesByUser);
+    expect(serialized).not.toMatch(/XDR:\s/);
+    expect(serialized).not.toMatch(/Bearer\s+ey/);
+    expect(serialized).not.toMatch(/sessionKey/);
+    expect(serialized).not.toMatch(/signedXdr/);
   });
 
   it("returns 400 for invalid from date", async () => {
@@ -248,6 +285,9 @@ describe("/api/audit/export route", () => {
 
       expect(response.status).toBe(200);
       expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
+      expect(response.headers.get("Content-Disposition")).toBe(
+        "attachment; filename=nexusguard-audit-mine.csv"
+      );
 
       const body = await response.text();
       expect(body).toContain("viewer-seeded");
@@ -283,6 +323,9 @@ describe("/api/audit/export route", () => {
 
       expect(response.status).toBe(200);
       expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
+      expect(response.headers.get("Content-Disposition")).toBe(
+        "attachment; filename=nexusguard-audit-all.csv"
+      );
 
       const body = await response.text();
       expect(body).toContain("viewer-seeded");
