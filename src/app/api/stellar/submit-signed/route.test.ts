@@ -2,12 +2,8 @@ import { Account, Asset, Keypair, Networks, Operation, TransactionBuilder } from
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// --- Mocks -----------------------------------------------------------------
-// NOTE: these mocks are written from the imports visible in route.ts. You may
-// need to adjust the exact return shapes (e.g. requireAuth's session object,
-// jsonWithRequestContext's signature) to match your real implementations --
-// I don't have those files, so I've kept the mocks to what's structurally
-// required for the route to execute.
+import { AUTH_COOKIE_KEY, createSessionToken } from "@/lib/auth/session";
+import { POST } from "./route";
 
 vi.mock("@/lib/auth/require-auth", () => ({
   requireAuth: vi.fn(),
@@ -201,5 +197,48 @@ describe("POST /api/stellar/submit-signed - source wallet verification", () => {
 
     expect(response.status).toBe(401);
     expect(body.error).toMatch(/no session wallet mapping/i);
+  });
+});
+
+function setupSecret() {
+  process.env.NEXUSGUARD_AUTH_SECRET = "integration-test-secret";
+}
+
+function viewerCookie() {
+  setupSecret();
+  const token = createSessionToken({
+    email: "viewer@nexusguard.local",
+    role: "viewer",
+    userId: "submit-viewer-id",
+    expiresInSeconds: 120,
+  });
+
+  return `${AUTH_COOKIE_KEY}=${token}`;
+}
+
+describe("POST /api/stellar/submit-signed authorization", () => {
+  it("returns 401 when unauthenticated", async () => {
+    const request = new NextRequest("http://localhost/api/stellar/submit-signed", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ signedXdr: "AAAA" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(401);
+  });
+
+  it("returns 403 for viewer role (operator-only route)", async () => {
+    const request = new NextRequest("http://localhost/api/stellar/submit-signed", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie: viewerCookie(),
+      },
+      body: JSON.stringify({ signedXdr: "AAAA" }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(403);
   });
 });

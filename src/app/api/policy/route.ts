@@ -5,7 +5,9 @@ import { jsonWithRequestContext } from "@/lib/observability/http";
 import { getRequestLogContext, logError, logInfo, logWarn } from "@/lib/observability/logger";
 import { consumeRateLimit, rateLimitHeaders } from "@/lib/security/rate-limit";
 import { readJsonBody } from "@/lib/http/read-json-body";
-import { getPolicyConfig, updatePolicyConfig } from "@/lib/storage/policy-store";
+import { z } from "zod";
+
+import { getPolicyConfig, PolicyVersionConflict, updatePolicyConfig } from "@/lib/storage/policy-store";
 import { policyConfigSchema } from "@/lib/validation/schemas";
 
 export async function GET(request: NextRequest) {
@@ -101,8 +103,32 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const updated = await updatePolicyConfig(parsed.data, auth.session.userId);
-    logInfo("Policy update success", { ...context, userId: auth.session.userId });
+    const versionMeta = z.object({
+      expectedVersion: z.number().int().positive().optional(),
+    }).safeParse(bodyResult.data);
+
+    if (!versionMeta.success) {
+      logWarn("Policy update invalid expectedVersion", { ...context, userId: auth.session.userId });
+      return jsonWithRequestContext(request, {
+        route: "/api/policy",
+        startedAtMs,
+        status: 400,
+        body: { error: "Invalid policy payload.", details: versionMeta.error.flatten() },
+        headers: rateLimitHeaders(rate),
+      });
+    }
+
+    const { expectedVersion } = versionMeta.data;
+
+    const updated = await updatePolicyConfig(parsed.data, auth.session.userId, {
+      expectedVersion,
+    });
+    logInfo("Policy update success", {
+      ...context,
+      userId: auth.session.userId,
+      version: updated.version,
+      ...(expectedVersion !== undefined ? { expectedVersion } : {}),
+    });
     return jsonWithRequestContext(request, {
       route: "/api/policy",
       startedAtMs,
@@ -111,6 +137,28 @@ export async function POST(request: NextRequest) {
       headers: rateLimitHeaders(rate),
     });
   } catch (error) {
+    if (error instanceof PolicyVersionConflict) {
+      logWarn("Policy update version conflict", {
+        ...context,
+        userId: auth.session.userId,
+        expectedVersion: error.expectedVersion,
+        currentVersion: error.currentVersion,
+      });
+      return jsonWithRequestContext(request, {
+        route: "/api/policy",
+        startedAtMs,
+        status: 409,
+        body: {
+          error: error.message,
+          code: "POLICY_VERSION_CONFLICT",
+          expectedVersion: error.expectedVersion,
+          currentVersion: error.currentVersion,
+          currentUpdatedAt: error.currentUpdatedAt,
+        },
+        headers: rateLimitHeaders(rate),
+      });
+    }
+
     logError("Policy update internal error", {
       ...context,
       userId: auth.session.userId,

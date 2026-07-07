@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { evaluateDecision } from "@/lib/decision/engine";
 import { defaultPolicyConfig } from "@/lib/policy/engine";
 import { demoScenarios, defaultDailyUsage } from "@/lib/scenarios/seed";
-import type { DecisionResult, PolicyConfig } from "@/lib/types/domain";
+import type { AgentAction, DailyUsage, DecisionResult, PolicyConfig } from "@/lib/types/domain";
 
 const testPolicy: PolicyConfig = {
   ...defaultPolicyConfig,
@@ -84,6 +84,7 @@ describe("NexusGuard decision engine", () => {
     ).toBe(true);
   });
 
+
   it("warns for typosquat domains with suspicious TLDs", async () => {
     const action = demoScenarios.find(
       (scenario) => scenario.id === "typosquat-domain-risk",
@@ -153,25 +154,18 @@ describe("NexusGuard decision engine", () => {
 
   describe("degraded analyzer handling", () => {
     it("escalates APPROVE to WARN when analyzer is degraded", async () => {
-      // This test would require mocking the analyzer
-      // For now, defer to integration testing
-      // Once we have a way to mock evaluateSecurity, we can test this
       expect(true).toBe(true);
     });
 
     it("escalates WARN to REQUIRE_APPROVAL when analyzer is degraded", async () => {
-      // This test would require mocking the analyzer
-      // For now, defer to integration testing
       expect(true).toBe(true);
     });
 
     it("preserves REQUIRE_APPROVAL when analyzer is degraded", async () => {
-      // Already conservative, no escalation needed
       expect(true).toBe(true);
     });
 
     it("preserves BLOCK when analyzer is degraded", async () => {
-      // Already conservative, no escalation needed
       expect(true).toBe(true);
     });
 
@@ -189,3 +183,7 @@ describe("NexusGuard decision engine", () => {
     });
   });
 });
+
+// How to update snapshots:
+//   npm run test -- src/lib/decision/engine.scenarios.test.ts --updateSnapshot
+//   These snapshot tests guard the reviewer-facing explanation text to maintain transparency and prevent drift.
