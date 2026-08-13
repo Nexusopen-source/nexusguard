@@ -94,7 +94,16 @@ export function evaluatePolicy(action: AgentAction, policy: PolicyConfig, usage:
     start.setHours(policy.allowedHours.start, 0, 0, 0);
     end.setHours(policy.allowedHours.end, 59, 59, 999);
 
-    if (!isWithinInterval(now, { start, end })) {
+    // `isWithinInterval` sorts its bounds internally, so when `start` is
+    // after `end` (an overnight window, e.g. 22:00-06:00) it silently
+    // treats the window as the inverted range instead of throwing — which
+    // would flip which hours are considered "allowed". Handle overnight
+    // windows explicitly by checking both segments they wrap around.
+    const isWithinWindow = policy.allowedHours.start <= policy.allowedHours.end
+      ? isWithinInterval(now, { start, end })
+      : now >= start || now <= end;
+
+    if (!isWithinWindow) {
       triggers.push({
         code: "OUTSIDE_ALLOWED_TIME",
         message: `Action is outside allowed operation window (${policy.allowedHours.start}:00-${policy.allowedHours.end}:59).`,
