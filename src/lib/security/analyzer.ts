@@ -5,6 +5,7 @@ import type {
   SecurityFinding,
 } from "@/lib/types/domain";
 import { fetchBlocklist } from "@/lib/security/blocklist";
+import { normalizeDomain } from "@/lib/policy/domain";
 
 /** Configuration for analyzer timeout behavior. */
 export interface AnalyzerConfig {
@@ -201,9 +202,15 @@ export async function evaluateSecurity(
     degradationReasons: [],
   };
 
+  // Normalize the domain the same way the policy engine does (lowercase,
+  // strip URL scheme/trailing dots) so reputation/blocklist checks can't be
+  // bypassed with mixed-case or URL-prefixed variants of a known-bad domain
+  // (e.g. "EVIL.com" or "https://wallet-drainer.evil/").
+  const normalizedDomain = normalizeDomain(action.domain) ?? action.domain;
+
   // Run local checks (always succeed)
   const findings = [
-    ...reputationCheck(action.domain),
+    ...reputationCheck(normalizedDomain),
     ...outputSafetyCheck(action.outputPreview),
     ...targetCheck(action),
   ];
@@ -230,7 +237,7 @@ export async function evaluateSecurity(
   }
 
   // Add blocklist findings (if available)
-  findings.push(...blocklistCheck(action.domain, blocklist));
+  findings.push(...blocklistCheck(normalizedDomain, blocklist));
 
   const riskScore = Math.min(
     100,
