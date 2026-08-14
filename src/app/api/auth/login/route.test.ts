@@ -39,16 +39,16 @@ describe("/api/auth/login challenge-signature flow", () => {
 
   afterEach(async () => {
     vi.useRealTimers();
-    delete process.env.FORTEXA_OPERATOR_WALLETS;
-    delete process.env.FORTEXA_VIEWER_WALLETS;
-    delete process.env.FORTEXA_AUTH_CHALLENGE_TTL_SECONDS;
+    delete process.env.NEXUSGUARD_OPERATOR_WALLETS;
+    delete process.env.NEXUSGUARD_VIEWER_WALLETS;
+    delete process.env.NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS;
     await resetWalletChallengeStore();
     await resetLoginLockoutStore();
   });
 
   it("issues a session cookie after a valid wallet signature", async () => {
-    process.env.FORTEXA_AUTH_SECRET = "login-route-test-secret";
-    process.env.FORTEXA_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
+    process.env.NEXUSGUARD_AUTH_SECRET = "login-route-test-secret";
+    process.env.NEXUSGUARD_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
 
     const challenge = await issueChallenge(AUTHORIZED_PUBLIC_KEY);
     const signature = signSep53Message(AUTHORIZED_SECRET, challenge.message);
@@ -74,8 +74,8 @@ describe("/api/auth/login challenge-signature flow", () => {
   });
 
   it("rejects replayed challenges", async () => {
-    process.env.FORTEXA_AUTH_SECRET = "login-route-test-secret";
-    process.env.FORTEXA_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
+    process.env.NEXUSGUARD_AUTH_SECRET = "login-route-test-secret";
+    process.env.NEXUSGUARD_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
 
     const challenge = await issueChallenge(AUTHORIZED_PUBLIC_KEY);
     const signature = signSep53Message(AUTHORIZED_SECRET, challenge.message);
@@ -110,9 +110,9 @@ describe("/api/auth/login challenge-signature flow", () => {
 
   it("rejects expired challenges", async () => {
     vi.useFakeTimers();
-    process.env.FORTEXA_AUTH_SECRET = "login-route-test-secret";
-    process.env.FORTEXA_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
-    process.env.FORTEXA_AUTH_CHALLENGE_TTL_SECONDS = "60";
+    process.env.NEXUSGUARD_AUTH_SECRET = "login-route-test-secret";
+    process.env.NEXUSGUARD_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
+    process.env.NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS = "60";
 
     const challenge = await issueChallenge(AUTHORIZED_PUBLIC_KEY);
     const signature = signSep53Message(AUTHORIZED_SECRET, challenge.message);
@@ -137,8 +137,8 @@ describe("/api/auth/login challenge-signature flow", () => {
   });
 
   it("rejects unauthorized wallets after signature verification", async () => {
-    process.env.FORTEXA_AUTH_SECRET = "login-route-test-secret";
-    process.env.FORTEXA_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
+    process.env.NEXUSGUARD_AUTH_SECRET = "login-route-test-secret";
+    process.env.NEXUSGUARD_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
 
     const unauthorized = Keypair.random();
     const challenge = await issueChallenge(unauthorized.publicKey());

@@ -3,17 +3,17 @@ import * as path from "node:path";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
 import { getUserWallet, upsertUserWallet, revokeUserWallet } from "./user-wallet-store";
-import { getFortexaStoreDir } from "./paths";
+import { getNexusGuardStoreDir } from "./paths";
 
 // Ensure tests use the fallback JSON store by bypassing Postgres if we don't configure it.
 // The existing app logic falls back to JSON if db is unavailable.
 
 describe("user-wallet-store (fallback)", () => {
-  const storePath = path.join(getFortexaStoreDir(), "wallets.json");
+  const storePath = path.join(getNexusGuardStoreDir(), "wallets.json");
 
   beforeEach(async () => {
     // ensure empty store before each test
-    await fs.mkdir(getFortexaStoreDir(), { recursive: true }).catch(() => {});
+    await fs.mkdir(getNexusGuardStoreDir(), { recursive: true }).catch(() => {});
     await fs.writeFile(storePath, JSON.stringify({ wallets: {} }), "utf8").catch(() => {});
   });
 

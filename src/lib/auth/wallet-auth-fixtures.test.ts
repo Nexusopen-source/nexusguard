@@ -26,14 +26,14 @@ function signSep53Message(secret: string, message: string) {
 describe("wallet-auth challenge signing — reviewer evidence fixtures", () => {
   afterEach(async () => {
     vi.useRealTimers();
-    delete process.env.FORTEXA_OPERATOR_WALLETS;
-    delete process.env.FORTEXA_AUTH_CHALLENGE_TTL_SECONDS;
+    delete process.env.NEXUSGUARD_OPERATOR_WALLETS;
+    delete process.env.NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS;
     await resetWalletChallengeStore();
   });
 
   // ── Case 1 ─────────────────────────────────────────────────────────────────
   it("case 1 — valid pair: verifier accepts a challenge signed by the authorized keypair", async () => {
-    process.env.FORTEXA_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
+    process.env.NEXUSGUARD_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
 
     const challenge = await createWalletChallenge(AUTHORIZED_PUBLIC_KEY);
     const signature = signSep53Message(AUTHORIZED_SECRET, challenge.message);
@@ -53,7 +53,7 @@ describe("wallet-auth challenge signing — reviewer evidence fixtures", () => {
   // ── Case 2 ─────────────────────────────────────────────────────────────────
   it("case 2 — expired challenge: verifier explicitly rejects a challenge past its TTL", async () => {
     vi.useFakeTimers();
-    process.env.FORTEXA_AUTH_CHALLENGE_TTL_SECONDS = "60";
+    process.env.NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS = "60";
 
     const challenge = await createWalletChallenge(AUTHORIZED_PUBLIC_KEY);
     const signature = signSep53Message(AUTHORIZED_SECRET, challenge.message);
@@ -71,7 +71,7 @@ describe("wallet-auth challenge signing — reviewer evidence fixtures", () => {
 
   // ── Case 3 ─────────────────────────────────────────────────────────────────
   it("case 3 — replayed challenge: verifier explicitly rejects a second use of the same challengeId", async () => {
-    process.env.FORTEXA_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
+    process.env.NEXUSGUARD_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
 
     const challenge = await createWalletChallenge(AUTHORIZED_PUBLIC_KEY);
     const signature = signSep53Message(AUTHORIZED_SECRET, challenge.message);
@@ -110,7 +110,7 @@ describe("wallet-auth challenge signing — reviewer evidence fixtures", () => {
   // ── Case 5 ─────────────────────────────────────────────────────────────────
   it("case 5 — unauthorized wallet role: resolveRoleByWallet returns null when wallet is absent from all role lists", () => {
     // Non-empty env disables open-dev fallback; only AUTHORIZED_PUBLIC_KEY is an operator.
-    process.env.FORTEXA_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
+    process.env.NEXUSGUARD_OPERATOR_WALLETS = AUTHORIZED_PUBLIC_KEY;
 
     // MISMATCHED_KEYPAIR's public key is not in any role list.
     const role = resolveRoleByWallet(MISMATCHED_KEYPAIR.publicKey());

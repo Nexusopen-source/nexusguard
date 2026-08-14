@@ -11,12 +11,12 @@ export type AuthSession = {
   exp: number;
 };
 
-export const AUTH_COOKIE_KEY = "fortexa_session";
+export const AUTH_COOKIE_KEY = "nexusguard_session";
 
 function getAuthSecret() {
-  const secret = process.env.FORTEXA_AUTH_SECRET?.trim();
+  const secret = process.env.NEXUSGUARD_AUTH_SECRET?.trim();
   if (!secret) {
-    throw new Error("FORTEXA_AUTH_SECRET is required for auth session signing.");
+    throw new Error("NEXUSGUARD_AUTH_SECRET is required for auth session signing.");
   }
   return secret;
 }

@@ -5,5 +5,5 @@ coverage
 .env.local
 .env
 .DS_Store
-.fortexa/
+.nexusguard/
 tsconfig.tsbuildinfo

@@ -311,7 +311,7 @@ export function OpsDashboard() {
                 ) : null}
               </>
             ) : (
-              <p>Set FORTEXA_BLOCKLIST_URL to enable threat-intel feed.</p>
+              <p>Set NEXUSGUARD_BLOCKLIST_URL to enable threat-intel feed.</p>
             )}
           </CardContent>
         </Card>

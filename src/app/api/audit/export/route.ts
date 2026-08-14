@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
         status: 200,
         headers: {
           "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": "attachment; filename=fortexa-audit-all.csv",
+          "Content-Disposition": "attachment; filename=nexusguard-audit-all.csv",
           "x-request-id": request.headers.get("x-request-id") ?? crypto.randomUUID(),
         },
       });
@@ -170,7 +170,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": "attachment; filename=fortexa-audit-mine.csv",
+        "Content-Disposition": "attachment; filename=nexusguard-audit-mine.csv",
         "x-request-id": request.headers.get("x-request-id") ?? crypto.randomUUID(),
       },
     });

@@ -1,6 +1,6 @@
 # Reviewer Evidence Matrix
 
-This document maps Fortexa's core security and payment claims directly to the codebase, tests, and API routes. It is designed to allow an SCF or investor reviewer to verify all claims in under 15 minutes.
+This document maps NexusGuard's core security and payment claims directly to the codebase, tests, and API routes. It is designed to allow an SCF or investor reviewer to verify all claims in under 15 minutes.
 
 ## 15-Minute Reviewer Checklist
 

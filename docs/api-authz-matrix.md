@@ -1,17 +1,17 @@
 # API Authorization Matrix
 
-This document is the single source of truth for authorization requirements across all Fortexa API routes. It is maintained alongside the route implementations and must be updated whenever routes or roles change.
+This document is the single source of truth for authorization requirements across all NexusGuard API routes. It is maintained alongside the route implementations and must be updated whenever routes or roles change.
 
 ## Authorization Model
 
-Fortexa uses two roles:
+NexusGuard uses two roles:
 
 | Role | Description |
 |------|-------------|
 | **operator** | Full access — can read and write policy, trigger decisions, build and submit Stellar transactions |
 | **viewer** | Read-only access — can read policy and audit entries, but cannot modify state |
 
-Session tokens are signed HMAC-SHA256 cookies (`fortexa_session`). Unauthenticated requests (no valid cookie) receive **401 Unauthorized**. Authenticated requests with an insufficient role receive **403 Forbidden**.
+Session tokens are signed HMAC-SHA256 cookies (`nexusguard_session`). Unauthenticated requests (no valid cookie) receive **401 Unauthorized**. Authenticated requests with an insufficient role receive **403 Forbidden**.
 
 ---
 
@@ -22,7 +22,7 @@ Session tokens are signed HMAC-SHA256 cookies (`fortexa_session`). Unauthenticat
 | Method | Route | Access Level | Unauthenticated | Viewer | State-Changing | Notes |
 |--------|-------|-------------|-----------------|--------|----------------|-------|
 | GET | `/api/auth/challenge` | Public | 200 (challenge issued) | 200 | No | Issues a SEP-53 wallet challenge; rate-limited |
-| POST | `/api/auth/login` | Public | 200 (sets session cookie) | 200 | Yes | Verifies wallet signature; sets `fortexa_session` cookie |
+| POST | `/api/auth/login` | Public | 200 (sets session cookie) | 200 | Yes | Verifies wallet signature; sets `nexusguard_session` cookie |
 | POST | `/api/auth/logout` | Public | 200 (clears cookie) | 200 | Yes | Clears the session cookie; no auth check |
 | POST | `/api/auth/refresh` | operator, viewer | 401 | 200 | Yes (refreshes token) | Requires valid session; extends token TTL |
 | GET | `/api/auth/session` | Public | 200 (no session body) | 200 | No | Returns session metadata if cookie is valid; safe to call unauthenticated |
@@ -112,5 +112,5 @@ Request
 
 - `requireAuth()` defaults to `allowedRoles: ["operator", "viewer"]` when no options are passed.
 - Adding a new protected route: call `requireAuth(request, { allowedRoles: [...] })` and add a row to this matrix.
-- The `FORTEXA_AUTH_SECRET` environment variable must be set; without it, no session tokens can be verified.
-- Role assignment is controlled by `FORTEXA_OPERATOR_WALLETS` and `FORTEXA_VIEWER_WALLETS` env vars (comma-separated Stellar public keys).
+- The `NEXUSGUARD_AUTH_SECRET` environment variable must be set; without it, no session tokens can be verified.
+- Role assignment is controlled by `NEXUSGUARD_OPERATOR_WALLETS` and `NEXUSGUARD_VIEWER_WALLETS` env vars (comma-separated Stellar public keys).

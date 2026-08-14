@@ -3,7 +3,7 @@ import path from "node:path";
 import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const sharedStatePath = path.join(process.cwd(), ".fortexa", "rate-limit-shared.test.json");
+const sharedStatePath = path.join(process.cwd(), ".nexusguard", "rate-limit-shared.test.json");
 
 function requestFromIp(ip: string) {
   return new NextRequest("http://localhost/api/test", {
@@ -16,13 +16,13 @@ function requestFromIp(ip: string) {
 
 describe("rate limit shared state", () => {
   afterEach(async () => {
-    delete process.env.FORTEXA_SHARED_STATE_PATH;
+    delete process.env.NEXUSGUARD_SHARED_STATE_PATH;
     await rm(sharedStatePath, { force: true });
     vi.resetModules();
   });
 
   it("persists bucket state across module reloads", async () => {
-    process.env.FORTEXA_SHARED_STATE_PATH = sharedStatePath;
+    process.env.NEXUSGUARD_SHARED_STATE_PATH = sharedStatePath;
 
     const firstModule = await import("@/lib/security/rate-limit");
     await firstModule.resetRateLimitStore();

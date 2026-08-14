@@ -15,7 +15,7 @@ export type BlocklistHealth = {
 
 /** Get the configured blocklist fetch timeout in milliseconds. */
 function getBlocklistTimeout(): number {
-  const envTimeout = process.env.FORTEXA_BLOCKLIST_TIMEOUT_MS;
+  const envTimeout = process.env.NEXUSGUARD_BLOCKLIST_TIMEOUT_MS;
   if (envTimeout) {
     const parsed = parseInt(envTimeout, 10);
     return isNaN(parsed) ? DEFAULT_FETCH_TIMEOUT_MS : Math.max(100, parsed);
@@ -26,7 +26,7 @@ function getBlocklistTimeout(): number {
 /** Return current blocklist feed health without triggering a refresh. */
 export function getBlocklistHealth(): BlocklistHealth {
   return {
-    configured: Boolean(process.env.FORTEXA_BLOCKLIST_URL),
+    configured: Boolean(process.env.NEXUSGUARD_BLOCKLIST_URL),
     lastRefreshAt,
     domainCount: cachedDomains.length,
     lastError: lastErrorSummary,
@@ -35,7 +35,7 @@ export function getBlocklistHealth(): BlocklistHealth {
 
 /** Fetch and cache the external blocklist. Returns [] on any failure. */
 export async function fetchBlocklist(): Promise<string[]> {
-  const url = process.env.FORTEXA_BLOCKLIST_URL;
+  const url = process.env.NEXUSGUARD_BLOCKLIST_URL;
   if (!url) return [];
 
   if (Date.now() < cacheExpiresAt) return cachedDomains;

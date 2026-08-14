@@ -1,7 +1,7 @@
 {
-  "name": "fortexa",
+  "name": "nexusguard",
   "version": "1.0.0",
-  "description": "Fortexa - policy-controlled agent wallet and security layer on Stellar",
+  "description": "NexusGuard - policy-controlled agent wallet and security layer on Stellar",
   "private": true,
   "scripts": {
     "dev": "next dev",

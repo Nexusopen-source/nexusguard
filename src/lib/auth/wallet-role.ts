@@ -26,8 +26,8 @@ export function isValidWalletPublicKey(publicKey: string) {
 export function resolveRoleByWallet(publicKey: string): AuthRole | null {
   const normalizedKey = normalizeWalletPublicKey(publicKey);
 
-  const operatorWallets = parseWalletList(process.env.FORTEXA_OPERATOR_WALLETS);
-  const viewerWallets = parseWalletList(process.env.FORTEXA_VIEWER_WALLETS);
+  const operatorWallets = parseWalletList(process.env.NEXUSGUARD_OPERATOR_WALLETS);
+  const viewerWallets = parseWalletList(process.env.NEXUSGUARD_VIEWER_WALLETS);
 
   if (operatorWallets.has(normalizedKey)) {
     return "operator";

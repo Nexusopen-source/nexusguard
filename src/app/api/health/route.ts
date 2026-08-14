@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   const env = {
     hasGroqKey: Boolean(process.env.GROQ_API_KEY),
-    hasAuthSecret: Boolean(process.env.FORTEXA_AUTH_SECRET),
+    hasAuthSecret: Boolean(process.env.NEXUSGUARD_AUTH_SECRET),
     hasHorizonUrl: Boolean(process.env.STELLAR_HORIZON_URL),
   };
 
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     status: 200,
     body: {
       ok: true,
-      service: "fortexa",
+      service: "nexusguard",
       timestamp: new Date().toISOString(),
       env,
       blocklist: blocklistData,

@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { promises as fs } from "node:fs";
 
 import { runWithDatabase } from "@/lib/storage/db";
-import { getFortexaStoreDir, getFortexaStorePath } from "@/lib/storage/paths";
+import { getNexusGuardStoreDir, getNexusGuardStorePath } from "@/lib/storage/paths";
 
 export type SubmitIdempotencyRecord = {
   userId: string;
@@ -17,14 +17,14 @@ type IdempotencyStoreFile = {
 };
 
 const DEFAULT_RETENTION_DAYS = 7;
-const storePath = getFortexaStorePath("submit-idempotency.json");
+const storePath = getNexusGuardStorePath("submit-idempotency.json");
 
 export function hashSignedXdr(signedXdr: string) {
   return createHash("sha256").update(signedXdr).digest("hex");
 }
 
 export function getIdempotencyRetentionDays(): number {
-  const raw = process.env.FORTEXA_IDEMPOTENCY_RETENTION_DAYS?.trim();
+  const raw = process.env.NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS?.trim();
   if (!raw) return DEFAULT_RETENTION_DAYS;
   const parsed = Number(raw);
   if (!Number.isFinite(parsed) || parsed < 1) return DEFAULT_RETENTION_DAYS;
@@ -36,7 +36,7 @@ function fileKey(userId: string, idempotencyKey: string) {
 }
 
 async function ensureStore() {
-  await fs.mkdir(getFortexaStoreDir(), { recursive: true });
+  await fs.mkdir(getNexusGuardStoreDir(), { recursive: true });
   try {
     await fs.access(storePath);
   } catch {
@@ -69,7 +69,7 @@ export async function getIdempotencyRecord(
     }>(
       `
         SELECT user_id, idempotency_key, xdr_hash, result, created_at
-        FROM fortexa_submit_idempotency
+        FROM nexusguard_submit_idempotency
         WHERE user_id = $1 AND idempotency_key = $2
       `,
       [userId, idempotencyKey]
@@ -114,7 +114,7 @@ export async function putIdempotencyRecord(
     // First write wins: a concurrent retry must not overwrite the original result.
     await pool.query(
       `
-        INSERT INTO fortexa_submit_idempotency (user_id, idempotency_key, xdr_hash, result, created_at)
+        INSERT INTO nexusguard_submit_idempotency (user_id, idempotency_key, xdr_hash, result, created_at)
         VALUES ($1, $2, $3, $4::jsonb, $5::timestamptz)
         ON CONFLICT (user_id, idempotency_key) DO NOTHING
       `,
@@ -139,7 +139,7 @@ export async function putIdempotencyRecord(
 
 export async function resetSubmitIdempotencyState(userId: string) {
   const db = await runWithDatabase("resetSubmitIdempotencyState", async (pool) => {
-    await pool.query(`DELETE FROM fortexa_submit_idempotency WHERE user_id = $1`, [userId]);
+    await pool.query(`DELETE FROM nexusguard_submit_idempotency WHERE user_id = $1`, [userId]);
     return true;
   });
 
@@ -170,7 +170,7 @@ export async function cleanupOldIdempotencyRecords(
 
   const db = await runWithDatabase("cleanupOldIdempotencyRecords", async (pool) => {
     const result = await pool.query(
-      `DELETE FROM fortexa_submit_idempotency
+      `DELETE FROM nexusguard_submit_idempotency
        WHERE created_at < $1::timestamptz
          AND created_at::date != CURRENT_DATE`,
       [cutoff.toISOString()]

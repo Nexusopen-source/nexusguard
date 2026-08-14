@@ -4,7 +4,7 @@ import { normalizeDomain } from "@/lib/policy/domain";
 import type { AgentAction, DailyUsage, PolicyConfig, PolicyEvaluation, PolicyTrigger } from "@/lib/types/domain";
 
 export const defaultPolicyConfig: PolicyConfig = {
-  allowedDomains: ["api.safe-research.ai", "tools.verified-data.dev", "workers.fortexa-demo.stellar"],
+  allowedDomains: ["api.safe-research.ai", "tools.verified-data.dev", "workers.nexusguard-demo.stellar"],
   blockedDomains: ["wallet-drainer.evil", "prompt-pwn.io", "untrusted-mirror.xyz"],
   allowedTools: ["research-pro", "market-feed", "settlement-worker"],
   blockedTools: ["shadow-shell", "autonomous-payout-bypass"],

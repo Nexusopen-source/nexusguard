@@ -104,7 +104,7 @@ export function getMetricsSnapshot() {
   );
 
   return {
-    service: "fortexa",
+    service: "nexusguard",
     timestamp: new Date().toISOString(),
     totals: {
       ...totals,
@@ -118,43 +118,43 @@ export function toPrometheusText() {
   const snapshot = getMetricsSnapshot();
   const lines: string[] = [];
 
-  lines.push("# HELP fortexa_requests_total Total API requests by route/method");
-  lines.push("# TYPE fortexa_requests_total counter");
+  lines.push("# HELP nexusguard_requests_total Total API requests by route/method");
+  lines.push("# TYPE nexusguard_requests_total counter");
 
   for (const route of snapshot.routes) {
     lines.push(
-      `fortexa_requests_total{route="${route.route}",method="${route.method}"} ${route.totalCount}`
+      `nexusguard_requests_total{route="${route.route}",method="${route.method}"} ${route.totalCount}`
     );
   }
 
-  lines.push("# HELP fortexa_request_errors_total Total API errors by route/method");
-  lines.push("# TYPE fortexa_request_errors_total counter");
+  lines.push("# HELP nexusguard_request_errors_total Total API errors by route/method");
+  lines.push("# TYPE nexusguard_request_errors_total counter");
 
   for (const route of snapshot.routes) {
     lines.push(
-      `fortexa_request_errors_total{route="${route.route}",method="${route.method}"} ${route.errorCount}`
+      `nexusguard_request_errors_total{route="${route.route}",method="${route.method}"} ${route.errorCount}`
     );
   }
 
-  lines.push("# HELP fortexa_request_duration_ms_p95 P95 request duration in milliseconds");
-  lines.push("# TYPE fortexa_request_duration_ms_p95 gauge");
+  lines.push("# HELP nexusguard_request_duration_ms_p95 P95 request duration in milliseconds");
+  lines.push("# TYPE nexusguard_request_duration_ms_p95 gauge");
 
   for (const route of snapshot.routes) {
     lines.push(
-      `fortexa_request_duration_ms_p95{route="${route.route}",method="${route.method}"} ${route.p95DurationMs.toFixed(2)}`
+      `nexusguard_request_duration_ms_p95{route="${route.route}",method="${route.method}"} ${route.p95DurationMs.toFixed(2)}`
     );
   }
 
-  lines.push("# HELP fortexa_decision_outcomes_total Total decision evaluations by outcome");
-  lines.push("# TYPE fortexa_decision_outcomes_total counter");
+  lines.push("# HELP nexusguard_decision_outcomes_total Total decision evaluations by outcome");
+  lines.push("# TYPE nexusguard_decision_outcomes_total counter");
   for (const [outcome, count] of decisionOutcomeCounts) {
-    lines.push(`fortexa_decision_outcomes_total{outcome="${outcome}"} ${count}`);
+    lines.push(`nexusguard_decision_outcomes_total{outcome="${outcome}"} ${count}`);
   }
 
-  lines.push("# HELP fortexa_stellar_submit_results_total Total Stellar submission attempts by result");
-  lines.push("# TYPE fortexa_stellar_submit_results_total counter");
+  lines.push("# HELP nexusguard_stellar_submit_results_total Total Stellar submission attempts by result");
+  lines.push("# TYPE nexusguard_stellar_submit_results_total counter");
   for (const [result, count] of stellarSubmitResultCounts) {
-    lines.push(`fortexa_stellar_submit_results_total{result="${result}"} ${count}`);
+    lines.push(`nexusguard_stellar_submit_results_total{result="${result}"} ${count}`);
   }
 
   return `${lines.join("\n")}\n`;

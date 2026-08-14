@@ -126,7 +126,7 @@ describe("OpsDashboard lastRefreshed feature", () => {
           json: () =>
             Promise.resolve({
               ok: true,
-              service: "fortexa",
+              service: "nexusguard",
               timestamp: "2026-06-29T23:56:21Z",
               env: { hasGroqKey: true, hasAuthSecret: true, hasHorizonUrl: true },
               blocklist: { configured: true, lastRefreshAt: "2026-06-29T23:00:00Z", domainCount: 42, lastError: null },
@@ -138,7 +138,7 @@ describe("OpsDashboard lastRefreshed feature", () => {
           ok: true,
           json: () =>
             Promise.resolve({
-              service: "fortexa",
+              service: "nexusguard",
               timestamp: "2026-06-29T23:56:21Z",
               totals: { totalCount: 10, errorCount: 0, errorRate: 0 },
               routes: [],

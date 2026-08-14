@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fortexa",
+  title: "NexusGuard",
   description: "Policy-controlled agent wallet and security layer on Stellar",
   icons: {
     icon: "/icon.jpg",

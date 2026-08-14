@@ -190,7 +190,7 @@ export function DecisionConsole() {
                   paymentQuoteInput: {
                     destination: destinationPreview,
                     memo: (actionOverride ?? activeAction)
-                      ? `fortexa:${(actionOverride ?? activeAction)!.id}`.slice(0, 28)
+                      ? `nexusguard:${(actionOverride ?? activeAction)!.id}`.slice(0, 28)
                       : undefined,
                     network: "testnet" as const,
                   },
@@ -205,7 +205,7 @@ export function DecisionConsole() {
                 ? {
                     paymentQuoteInput: {
                       destination: destinationPreview,
-                      memo: `fortexa:${generatedAction.id}`.slice(0, 28),
+                      memo: `nexusguard:${generatedAction.id}`.slice(0, 28),
                       network: "testnet" as const,
                     },
                   }
@@ -218,7 +218,7 @@ export function DecisionConsole() {
                 ? {
                     paymentQuoteInput: {
                       destination: destinationPreview,
-                      memo: `fortexa:${activeAction.id}`.slice(0, 28),
+                      memo: `nexusguard:${activeAction.id}`.slice(0, 28),
                       network: "testnet" as const,
                     },
                   }
@@ -336,7 +336,7 @@ export function DecisionConsole() {
           destination: normalizedDestination,
           amountXLM: amount.toFixed(7),
           asset: "native",
-          memo: `fortexa:${activeAction.id}`.slice(0, 28),
+          memo: `nexusguard:${activeAction.id}`.slice(0, 28),
           network: "testnet",
         }),
       });

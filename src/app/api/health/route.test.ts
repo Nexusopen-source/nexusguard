@@ -24,7 +24,7 @@ describe("GET /api/health", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete process.env.GROQ_API_KEY;
-    delete process.env.FORTEXA_AUTH_SECRET;
+    delete process.env.NEXUSGUARD_AUTH_SECRET;
     delete process.env.STELLAR_HORIZON_URL;
   });
 

@@ -3,17 +3,17 @@ import { fetchBlocklist, getBlocklistHealth, resetBlocklistCache } from "@/lib/s
 
 describe("blocklist health", () => {
   beforeEach(() => {
-    delete process.env.FORTEXA_BLOCKLIST_URL;
+    delete process.env.NEXUSGUARD_BLOCKLIST_URL;
     resetBlocklistCache();
     vi.restoreAllMocks();
   });
 
   afterEach(() => {
-    delete process.env.FORTEXA_BLOCKLIST_URL;
+    delete process.env.NEXUSGUARD_BLOCKLIST_URL;
     resetBlocklistCache();
   });
 
-  it("reports unconfigured when FORTEXA_BLOCKLIST_URL is not set", () => {
+  it("reports unconfigured when NEXUSGUARD_BLOCKLIST_URL is not set", () => {
     const health = getBlocklistHealth();
     expect(health.configured).toBe(false);
     expect(health.lastRefreshAt).toBeNull();
@@ -22,7 +22,7 @@ describe("blocklist health", () => {
   });
 
   it("reports configured with domain count and refresh timestamp after successful fetch", async () => {
-    process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
+    process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(JSON.stringify(["bad-actor.com", "scam.io"]), { status: 200 })
     );
@@ -38,7 +38,7 @@ describe("blocklist health", () => {
   });
 
   it("reports last error summary after a failed fetch", async () => {
-    process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
+    process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
     vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(new Error("Network error"));
 
     const domains = await fetchBlocklist();
@@ -51,7 +51,7 @@ describe("blocklist health", () => {
   });
 
   it("reports stale cache and error when fetch fails after a prior success", async () => {
-    process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
+    process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
 
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(JSON.stringify(["bad-actor.com"]), { status: 200 })
@@ -73,7 +73,7 @@ describe("blocklist health", () => {
   });
 
   it("returns empty array and reports error on HTTP error", async () => {
-    process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
+    process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response("Service Unavailable", { status: 503 })
     );

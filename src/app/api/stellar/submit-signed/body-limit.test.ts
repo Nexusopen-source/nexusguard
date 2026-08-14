@@ -6,9 +6,9 @@ import { AUTH_COOKIE_KEY, createSessionToken } from "@/lib/auth/session";
 import { DEFAULT_JSON_BODY_MAX_BYTES } from "@/lib/http/read-json-body";
 
 function operatorCookie() {
-  process.env.FORTEXA_AUTH_SECRET = "submit-signed-body-limit-secret";
+  process.env.NEXUSGUARD_AUTH_SECRET = "submit-signed-body-limit-secret";
   const token = createSessionToken({
-    email: "operator@fortexa.local",
+    email: "operator@nexusguard.local",
     role: "operator",
     userId: "submit-signed-body-limit-operator",
     expiresInSeconds: 120,

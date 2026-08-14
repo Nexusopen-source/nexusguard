@@ -9,13 +9,13 @@ import {
 
 describe("login lockout", () => {
   beforeEach(async () => {
-    process.env.FORTEXA_AUTH_MAX_ATTEMPTS = "2";
-    process.env.FORTEXA_AUTH_LOCK_MINUTES = "1";
+    process.env.NEXUSGUARD_AUTH_MAX_ATTEMPTS = "2";
+    process.env.NEXUSGUARD_AUTH_LOCK_MINUTES = "1";
     await resetLoginLockoutStore();
   });
 
   it("increments failed login attempt counters", async () => {
-    const email = "operator@fortexa.local";
+    const email = "operator@nexusguard.local";
     const ip = "127.0.0.1";
 
     expect((await isLoginLocked(email, ip)).locked).toBe(false);
@@ -28,7 +28,7 @@ describe("login lockout", () => {
   });
 
   it("clears lockout state on success", async () => {
-    const email = "viewer@fortexa.local";
+    const email = "viewer@nexusguard.local";
     const ip = "127.0.0.2";
 
     await registerLoginFailure(email, ip);

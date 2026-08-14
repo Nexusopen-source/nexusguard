@@ -2,7 +2,7 @@ import { promises as fs } from "node:fs";
 
 import { GENESIS_HASH, computeEntryHash } from "@/lib/audit/hash-chain";
 import { runWithDatabase } from "@/lib/storage/db";
-import { getFortexaStoreDir, getFortexaStorePath } from "@/lib/storage/paths";
+import { getNexusGuardStoreDir, getNexusGuardStorePath } from "@/lib/storage/paths";
 import type { AuditEntry, DailyUsage, DecisionType } from "@/lib/types/domain";
 
 type AuditStoreFile = {
@@ -68,7 +68,7 @@ function applyFilter(
   });
 }
 
-const storePath = getFortexaStorePath("audit.json");
+const storePath = getNexusGuardStorePath("audit.json");
 
 const baselineUsage: DailyUsage = {
   spentXLM: 0,
@@ -77,7 +77,7 @@ const baselineUsage: DailyUsage = {
 };
 
 async function ensureStore() {
-  await fs.mkdir(getFortexaStoreDir(), { recursive: true });
+  await fs.mkdir(getNexusGuardStoreDir(), { recursive: true });
   try {
     await fs.access(storePath);
   } catch {
@@ -109,7 +109,7 @@ export async function listAuditEntries(userId: string, filter?: AuditFilter) {
     const result = await pool.query<{ payload: AuditEntry }>(
       `
         SELECT payload
-        FROM fortexa_audit_entries
+        FROM nexusguard_audit_entries
         WHERE user_id = $1
         ORDER BY timestamp DESC
       `,
@@ -141,7 +141,7 @@ export async function listAllAuditEntriesByUser(filter?: AuditFilter) {
       const result = await pool.query<{ user_id: string; payload: AuditEntry }>(
         `
         SELECT user_id, payload
-        FROM fortexa_audit_entries
+        FROM nexusguard_audit_entries
         ORDER BY timestamp DESC
       `,
       );
@@ -186,7 +186,7 @@ export async function appendAuditEntry(userId: string, entry: AuditEntry) {
     const prevResult = await pool.query<{ entry_hash: string }>(
       `
         SELECT entry_hash
-        FROM fortexa_audit_entries
+        FROM nexusguard_audit_entries
         WHERE user_id = $1
           AND entry_hash IS NOT NULL
         ORDER BY timestamp DESC
@@ -201,7 +201,7 @@ export async function appendAuditEntry(userId: string, entry: AuditEntry) {
 
     await pool.query(
       `
-        INSERT INTO fortexa_audit_entries (id, user_id, timestamp, payload, entry_hash)
+        INSERT INTO nexusguard_audit_entries (id, user_id, timestamp, payload, entry_hash)
         VALUES ($1, $2, $3::timestamptz, $4::jsonb, $5)
       `,
       [
@@ -242,7 +242,7 @@ export async function getDailyUsage(userId: string) {
     }>(
       `
         SELECT spent_xlm, tool_calls, last_updated
-        FROM fortexa_usage
+        FROM nexusguard_usage
         WHERE user_id = $1
       `,
       [userId],
@@ -284,7 +284,7 @@ export async function consumeUsage(userId: string, amountXLM: number) {
     }>(
       `
         SELECT spent_xlm, tool_calls
-        FROM fortexa_usage
+        FROM nexusguard_usage
         WHERE user_id = $1
       `,
       [userId],
@@ -296,7 +296,7 @@ export async function consumeUsage(userId: string, amountXLM: number) {
 
     await pool.query(
       `
-        INSERT INTO fortexa_usage (user_id, spent_xlm, tool_calls, last_updated)
+        INSERT INTO nexusguard_usage (user_id, spent_xlm, tool_calls, last_updated)
         VALUES ($1, $2, $3, $4::timestamptz)
         ON CONFLICT (user_id)
         DO UPDATE SET
@@ -329,12 +329,12 @@ export async function consumeUsage(userId: string, amountXLM: number) {
 
 export async function resetAuditState(userId: string) {
   const db = await runWithDatabase("resetAuditState", async (pool) => {
-    await pool.query("DELETE FROM fortexa_audit_entries WHERE user_id = $1", [
+    await pool.query("DELETE FROM nexusguard_audit_entries WHERE user_id = $1", [
       userId,
     ]);
     await pool.query(
       `
-        INSERT INTO fortexa_usage (user_id, spent_xlm, tool_calls, last_updated)
+        INSERT INTO nexusguard_usage (user_id, spent_xlm, tool_calls, last_updated)
         VALUES ($1, 0, 0, $2::timestamptz)
         ON CONFLICT (user_id)
         DO UPDATE SET

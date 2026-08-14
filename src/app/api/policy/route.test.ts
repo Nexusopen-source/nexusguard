@@ -6,9 +6,9 @@ import { DEFAULT_JSON_BODY_MAX_BYTES } from "@/lib/http/read-json-body";
 import { GET, POST } from "@/app/api/policy/route";
 
 function operatorCookie() {
-  process.env.FORTEXA_AUTH_SECRET = "integration-test-secret";
+  process.env.NEXUSGUARD_AUTH_SECRET = "integration-test-secret";
   const token = createSessionToken({
-    email: "operator@fortexa.local",
+    email: "operator@nexusguard.local",
     role: "operator",
     userId: "operator-user-id",
     expiresInSeconds: 120,
@@ -18,9 +18,9 @@ function operatorCookie() {
 }
 
 function viewerCookie() {
-  process.env.FORTEXA_AUTH_SECRET = "integration-test-secret";
+  process.env.NEXUSGUARD_AUTH_SECRET = "integration-test-secret";
   const token = createSessionToken({
-    email: "viewer@fortexa.local",
+    email: "viewer@nexusguard.local",
     role: "viewer",
     userId: "viewer-user-id",
     expiresInSeconds: 120,

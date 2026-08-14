@@ -2,7 +2,7 @@
   "allowedDomains": [
     "api.safe-research.ai",
     "tools.verified-data.dev",
-    "workers.fortexa-demo.stellar"
+    "workers.nexusguard-demo.stellar"
   ],
   "blockedDomains": [
     "wallet-drainer.evil",

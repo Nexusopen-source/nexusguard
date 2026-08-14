@@ -9,18 +9,18 @@ import type {
 
 function decideExplanation(result: DecisionResult): string {
   if (result.decision === "BLOCK") {
-    return "Fortexa blocked this action because policy and security controls indicate a materially unsafe payment/tool operation.";
+    return "NexusGuard blocked this action because policy and security controls indicate a materially unsafe payment/tool operation.";
   }
 
   if (result.decision === "REQUIRE_APPROVAL") {
-    return "Fortexa flagged this as high impact. Manual approval is required before economic execution.";
+    return "NexusGuard flagged this as high impact. Manual approval is required before economic execution.";
   }
 
   if (result.decision === "WARN") {
-    return "Fortexa allows this action with caution. Risk signals were detected and logged for operator review.";
+    return "NexusGuard allows this action with caution. Risk signals were detected and logged for operator review.";
   }
 
-  return "Fortexa approved this action. Policy checks and risk analysis are within trusted operating bounds.";
+  return "NexusGuard approved this action. Policy checks and risk analysis are within trusted operating bounds.";
 }
 
 export async function evaluateDecision(

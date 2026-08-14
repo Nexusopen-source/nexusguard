@@ -54,12 +54,12 @@ describe("readJsonBody", () => {
     expect(result).toEqual({ ok: true, data: {} });
   });
 
-  it("reads FORTEXA_JSON_BODY_MAX_BYTES when set", () => {
-    const previous = process.env.FORTEXA_JSON_BODY_MAX_BYTES;
-    process.env.FORTEXA_JSON_BODY_MAX_BYTES = "8192";
+  it("reads NEXUSGUARD_JSON_BODY_MAX_BYTES when set", () => {
+    const previous = process.env.NEXUSGUARD_JSON_BODY_MAX_BYTES;
+    process.env.NEXUSGUARD_JSON_BODY_MAX_BYTES = "8192";
 
     expect(getJsonBodyMaxBytes()).toBe(8192);
 
-    process.env.FORTEXA_JSON_BODY_MAX_BYTES = previous;
+    process.env.NEXUSGUARD_JSON_BODY_MAX_BYTES = previous;
   });
 });

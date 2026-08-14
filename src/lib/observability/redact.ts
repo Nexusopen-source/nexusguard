@@ -4,7 +4,7 @@ const SENSITIVE_KEYS = new Set([
   "xdr",
   "authorization",
   "cookie",
-  "fortexa_session",
+  "nexusguard_session",
   "groq_api_key",
   "secret",
   "token",

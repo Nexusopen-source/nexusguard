@@ -40,7 +40,7 @@ async function ensureSchema(targetPool: Pool) {
   if (!initPromise) {
     initPromise = (async () => {
       await targetPool.query(`
-        CREATE TABLE IF NOT EXISTS fortexa_schema_migrations (
+        CREATE TABLE IF NOT EXISTS nexusguard_schema_migrations (
           id TEXT PRIMARY KEY,
           applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         );
@@ -49,7 +49,7 @@ async function ensureSchema(targetPool: Pool) {
       const applied = await targetPool.query<{ id: string }>(
         `
           SELECT id
-          FROM fortexa_schema_migrations
+          FROM nexusguard_schema_migrations
         `
       );
 
@@ -65,7 +65,7 @@ async function ensureSchema(targetPool: Pool) {
           await targetPool.query(migration.sql);
           await targetPool.query(
             `
-              INSERT INTO fortexa_schema_migrations (id)
+              INSERT INTO nexusguard_schema_migrations (id)
               VALUES ($1)
             `,
             [migration.id]

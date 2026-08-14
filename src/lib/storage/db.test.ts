@@ -39,10 +39,10 @@ describe("db storage helper", () => {
   });
 
   it("runs migrations before action when DB is configured", async () => {
-    process.env.DATABASE_URL = "postgres://fortexa:test@localhost:5432/fortexa";
+    process.env.DATABASE_URL = "postgres://nexusguard:test@localhost:5432/nexusguard";
 
     queryMock.mockImplementation(async (sql: string) => {
-      if (sql.includes("SELECT id") && sql.includes("fortexa_schema_migrations")) {
+      if (sql.includes("SELECT id") && sql.includes("nexusguard_schema_migrations")) {
         return { rows: [] };
       }
 
@@ -58,13 +58,13 @@ describe("db storage helper", () => {
 
     expect(
       queryMock.mock.calls.some(
-        (call) => typeof call[0] === "string" && call[0].includes("fortexa_schema_migrations")
+        (call) => typeof call[0] === "string" && call[0].includes("nexusguard_schema_migrations")
       )
     ).toBe(true);
 
     expect(
       queryMock.mock.calls.some(
-        (call) => typeof call[0] === "string" && call[0].includes("CREATE TABLE IF NOT EXISTS fortexa_wallets")
+        (call) => typeof call[0] === "string" && call[0].includes("CREATE TABLE IF NOT EXISTS nexusguard_wallets")
       )
     ).toBe(true);
   });

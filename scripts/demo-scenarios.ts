@@ -3,7 +3,7 @@ import { defaultPolicyConfig } from "../src/lib/policy/engine";
 import { demoScenarios, defaultDailyUsage } from "../src/lib/scenarios/seed";
 
 (async () => {
-  console.log("Fortexa Scenario Demo Runner\n");
+  console.log("NexusGuard Scenario Demo Runner\n");
 
   for (const scenario of demoScenarios) {
     const result = await evaluateDecision(scenario.action, defaultPolicyConfig, defaultDailyUsage);

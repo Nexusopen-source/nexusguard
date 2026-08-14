@@ -78,7 +78,7 @@ export function resetRedisClient() {
 }
 
 function getSharedStatePath() {
-  const configured = process.env.FORTEXA_SHARED_STATE_PATH?.trim();
+  const configured = process.env.NEXUSGUARD_SHARED_STATE_PATH?.trim();
   if (!configured) {
     return null;
   }
@@ -149,7 +149,7 @@ async function runWithRedisFallback<T>(
 export async function readSharedRateLimit(key: string): Promise<SharedRateLimitState | undefined> {
   return runWithRedisFallback(
     async (client) => {
-      const redisKey = `fortexa:rate-limit:${key}`;
+      const redisKey = `nexusguard:rate-limit:${key}`;
       const raw = await client.get(redisKey);
       if (!raw) {
         return undefined;
@@ -163,7 +163,7 @@ export async function readSharedRateLimit(key: string): Promise<SharedRateLimitS
 export async function writeSharedRateLimit(key: string, value: SharedRateLimitState): Promise<void> {
   await runWithRedisFallback(
     async (client) => {
-      const redisKey = `fortexa:rate-limit:${key}`;
+      const redisKey = `nexusguard:rate-limit:${key}`;
       const now = Date.now();
       const ttlSeconds = Math.max(1, Math.ceil((value.resetAt - now) / 1000));
       await client.set(redisKey, JSON.stringify(value), "EX", ttlSeconds);
@@ -179,7 +179,7 @@ export async function writeSharedRateLimit(key: string, value: SharedRateLimitSt
 export async function clearSharedRateLimits(): Promise<void> {
   await runWithRedisFallback(
     async (client) => {
-      const keys = await client.keys("fortexa:rate-limit:*");
+      const keys = await client.keys("nexusguard:rate-limit:*");
       if (keys.length > 0) {
         await client.del(keys);
       }
@@ -195,7 +195,7 @@ export async function clearSharedRateLimits(): Promise<void> {
 export async function readSharedLockout(key: string): Promise<SharedLockoutState | undefined> {
   return runWithRedisFallback(
     async (client) => {
-      const redisKey = `fortexa:lockout:${key}`;
+      const redisKey = `nexusguard:lockout:${key}`;
       const raw = await client.get(redisKey);
       if (!raw) {
         return undefined;
@@ -209,7 +209,7 @@ export async function readSharedLockout(key: string): Promise<SharedLockoutState
 export async function writeSharedLockout(key: string, value: SharedLockoutState): Promise<void> {
   await runWithRedisFallback(
     async (client) => {
-      const redisKey = `fortexa:lockout:${key}`;
+      const redisKey = `nexusguard:lockout:${key}`;
       const now = Date.now();
       let ttlSeconds = 86400; // 24 hours fallback
       if (value.lockedUntilMs > now) {
@@ -228,7 +228,7 @@ export async function writeSharedLockout(key: string, value: SharedLockoutState)
 export async function removeSharedLockout(key: string): Promise<void> {
   await runWithRedisFallback(
     async (client) => {
-      const redisKey = `fortexa:lockout:${key}`;
+      const redisKey = `nexusguard:lockout:${key}`;
       await client.del(redisKey);
     },
     () => {
@@ -242,7 +242,7 @@ export async function removeSharedLockout(key: string): Promise<void> {
 export async function clearSharedLockouts(): Promise<void> {
   await runWithRedisFallback(
     async (client) => {
-      const keys = await client.keys("fortexa:lockout:*");
+      const keys = await client.keys("nexusguard:lockout:*");
       if (keys.length > 0) {
         await client.del(keys);
       }
@@ -258,7 +258,7 @@ export async function clearSharedLockouts(): Promise<void> {
 export async function readSharedChallenge(key: string): Promise<SharedChallengeState | undefined> {
   return runWithRedisFallback(
     async (client) => {
-      const redisKey = `fortexa:challenge:${key}`;
+      const redisKey = `nexusguard:challenge:${key}`;
       const raw = await client.get(redisKey);
       if (!raw) {
         return undefined;
@@ -276,7 +276,7 @@ export async function writeSharedChallenge(
 ): Promise<void> {
   await runWithRedisFallback(
     async (client) => {
-      const redisKey = `fortexa:challenge:${key}`;
+      const redisKey = `nexusguard:challenge:${key}`;
       await client.set(redisKey, JSON.stringify(value), "EX", Math.max(1, ttlSeconds));
     },
     () => {
@@ -290,7 +290,7 @@ export async function writeSharedChallenge(
 export async function deleteSharedChallenge(key: string): Promise<void> {
   await runWithRedisFallback(
     async (client) => {
-      const redisKey = `fortexa:challenge:${key}`;
+      const redisKey = `nexusguard:challenge:${key}`;
       await client.del(redisKey);
     },
     () => {
@@ -304,7 +304,7 @@ export async function deleteSharedChallenge(key: string): Promise<void> {
 export async function clearSharedChallenges(): Promise<void> {
   await runWithRedisFallback(
     async (client) => {
-      const keys = await client.keys("fortexa:challenge:*");
+      const keys = await client.keys("nexusguard:challenge:*");
       if (keys.length > 0) {
         await client.del(keys);
       }
@@ -330,7 +330,7 @@ export async function clearSharedSecurityStateFile(): Promise<void> {
   const client = getRedisClient();
   if (client && !isRedisUnreachable) {
     try {
-      const keys = await client.keys("fortexa:*");
+      const keys = await client.keys("nexusguard:*");
       if (keys.length > 0) {
         await client.del(keys);
       }

@@ -4,9 +4,9 @@ import { Keypair } from "@stellar/stellar-sdk";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
-  const tmpDir = `/tmp/fortexa-build-payment-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  process.env.FORTEXA_STORE_DIR = tmpDir;
-  process.env.FORTEXA_AUTH_SECRET = "build-payment-test-secret";
+  const tmpDir = `/tmp/nexusguard-build-payment-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  process.env.NEXUSGUARD_STORE_DIR = tmpDir;
+  process.env.NEXUSGUARD_AUTH_SECRET = "build-payment-test-secret";
   process.env.STELLAR_HORIZON_URL = "https://horizon-mock.test";
   delete process.env.DATABASE_URL;
 });
@@ -54,11 +54,11 @@ const OPERATOR_USER_ID = "build-payment-operator";
 const sourceKeypair = Keypair.random();
 const destinationKeypair = Keypair.random();
 const authorizedAmount = "18.0000000";
-const authorizedMemo = "fortexa:act-safe-1";
+const authorizedMemo = "nexusguard:act-safe-1";
 
 function operatorCookie() {
   const token = createSessionToken({
-    email: "build-payment@fortexa.local",
+    email: "build-payment@nexusguard.local",
     role: "operator",
     userId: OPERATOR_USER_ID,
     expiresInSeconds: 300,
@@ -131,8 +131,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const storeDir = process.env.FORTEXA_STORE_DIR;
-  if (storeDir && storeDir.startsWith("/tmp/fortexa-build-payment-")) {
+  const storeDir = process.env.NEXUSGUARD_STORE_DIR;
+  if (storeDir && storeDir.startsWith("/tmp/nexusguard-build-payment-")) {
     await fs.rm(storeDir, { recursive: true, force: true }).catch(() => undefined);
   }
 });
@@ -264,7 +264,7 @@ describe("POST /api/stellar/build-payment quote verification", () => {
 
 function viewerCookie() {
   const token = createSessionToken({
-    email: "viewer@fortexa.local",
+    email: "viewer@nexusguard.local",
     role: "viewer",
     userId: "build-payment-viewer",
     expiresInSeconds: 120,
@@ -283,7 +283,7 @@ describe("POST /api/stellar/build-payment authorization", () => {
         destination: destinationKeypair.publicKey(),
         amountXLM: "10.0000000",
         asset: "native",
-        memo: "fortexa:test",
+        memo: "nexusguard:test",
         network: "testnet",
       }),
     });
@@ -304,7 +304,7 @@ describe("POST /api/stellar/build-payment authorization", () => {
         destination: destinationKeypair.publicKey(),
         amountXLM: "10.0000000",
         asset: "native",
-        memo: "fortexa:test",
+        memo: "nexusguard:test",
         network: "testnet",
       }),
     });

@@ -1,4 +1,4 @@
-// Horizon error result codes mapped to Fortexa‑stable categories
+// Horizon error result codes mapped to NexusGuard‑stable categories
 export enum HorizonErrorCategory {
   INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE",
   BAD_SEQUENCE = "BAD_SEQUENCE",

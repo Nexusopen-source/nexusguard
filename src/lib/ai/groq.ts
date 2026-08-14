@@ -29,7 +29,7 @@ export async function generateAgentActionWithGroq(input: AgentPlanRequestInput) 
   }
 
   const systemPrompt = [
-    "You are an AI agent planner for Fortexa.",
+    "You are an AI agent planner for NexusGuard.",
     "Return only one JSON object matching this schema:",
     '{"id":"string","name":"string","kind":"api_payment|tool_access|transfer|endpoint_call","target":"string","domain":"string","amountXLM":number,"tool":"string(optional)","outputPreview":"string(optional)","metadata":{}}',
     "Hard rules:",

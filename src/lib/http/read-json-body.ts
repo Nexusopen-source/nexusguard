@@ -2,7 +2,7 @@
 export const DEFAULT_JSON_BODY_MAX_BYTES = 64 * 1024;
 
 export function getJsonBodyMaxBytes(): number {
-  const configured = process.env.FORTEXA_JSON_BODY_MAX_BYTES;
+  const configured = process.env.NEXUSGUARD_JSON_BODY_MAX_BYTES;
   if (!configured) {
     return DEFAULT_JSON_BODY_MAX_BYTES;
   }

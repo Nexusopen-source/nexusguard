@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs";
 
 import { runWithDatabase } from "@/lib/storage/db";
-import { getFortexaStoreDir, getFortexaStorePath } from "@/lib/storage/paths";
+import { getNexusGuardStoreDir, getNexusGuardStorePath } from "@/lib/storage/paths";
 
 export type UserWallet = {
   userId: string;
@@ -17,10 +17,10 @@ type WalletStoreFile = {
   wallets: Record<string, UserWallet | { [key: string]: unknown }>;
 };
 
-const storePath = getFortexaStorePath("wallets.json");
+const storePath = getNexusGuardStorePath("wallets.json");
 
 async function ensureStore() {
-  await fs.mkdir(getFortexaStoreDir(), { recursive: true });
+  await fs.mkdir(getNexusGuardStoreDir(), { recursive: true });
   try {
     await fs.access(storePath);
   } catch {
@@ -100,7 +100,7 @@ export async function getUserWallet(userId: string): Promise<UserWallet | { expi
     }>(
       `
         SELECT user_id, public_key, source, provider, created_at, updated_at, expires_at
-        FROM fortexa_wallets
+        FROM nexusguard_wallets
         WHERE user_id = $1
       `,
       [userId]
@@ -155,7 +155,7 @@ export async function upsertUserWallet(
     const existing = await pool.query<{ created_at: string }>(
       `
         SELECT created_at
-        FROM fortexa_wallets
+        FROM nexusguard_wallets
         WHERE user_id = $1
       `,
       [userId]
@@ -170,7 +170,7 @@ export async function upsertUserWallet(
 
     await pool.query(
       `
-        INSERT INTO fortexa_wallets (user_id, public_key, source, provider, created_at, updated_at, expires_at)
+        INSERT INTO nexusguard_wallets (user_id, public_key, source, provider, created_at, updated_at, expires_at)
         VALUES ($1, $2, $3, $4, $5::timestamptz, $6::timestamptz, $7::timestamptz)
         ON CONFLICT (user_id)
         DO UPDATE SET
@@ -223,7 +223,7 @@ export async function revokeUserWallet(userId: string): Promise<void> {
   const db = await runWithDatabase("revokeUserWallet", async (pool) => {
     await pool.query(
       `
-        DELETE FROM fortexa_wallets
+        DELETE FROM nexusguard_wallets
         WHERE user_id = $1
       `,
       [userId]

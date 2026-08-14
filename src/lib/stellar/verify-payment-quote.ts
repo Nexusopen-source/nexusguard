@@ -36,12 +36,12 @@ const DEFAULT_QUOTE_TTL_SECONDS = 300;
 
 /**
  * Returns the payment quote TTL in milliseconds.
- * Reads FORTEXA_PAYMENT_QUOTE_TTL_SECONDS; falls back to 300 s when the
+ * Reads NEXUSGUARD_PAYMENT_QUOTE_TTL_SECONDS; falls back to 300 s when the
  * value is absent, non-numeric, or less than 1.
  */
 function getQuoteTtlMs(): number {
   const parsed = Number(
-    process.env.FORTEXA_PAYMENT_QUOTE_TTL_SECONDS ?? DEFAULT_QUOTE_TTL_SECONDS,
+    process.env.NEXUSGUARD_PAYMENT_QUOTE_TTL_SECONDS ?? DEFAULT_QUOTE_TTL_SECONDS,
   );
   if (!Number.isFinite(parsed) || parsed < 1) {
     return DEFAULT_QUOTE_TTL_SECONDS * 1000;
@@ -68,7 +68,7 @@ export function buildPaymentQuoteFromDecision(input: {
     destination: input.destination.trim().toUpperCase(),
     amountXLM: normalizeAmountXLM(input.amountXLM),
     asset: "native",
-    memo: (input.memo ?? `fortexa:${input.actionId}`).slice(0, 28),
+    memo: (input.memo ?? `nexusguard:${input.actionId}`).slice(0, 28),
     network: input.network ?? "testnet",
   };
 }

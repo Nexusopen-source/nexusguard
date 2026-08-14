@@ -39,12 +39,12 @@ import {
   resetRedisClient
 } from "./shared-security-state";
 
-const testFilePath = path.join(process.cwd(), ".fortexa", "shared-state-test.json");
+const testFilePath = path.join(process.cwd(), ".nexusguard", "shared-state-test.json");
 
 describe("shared-security-state with Redis & File Fallback", () => {
   beforeEach(async () => {
     delete process.env.REDIS_URL;
-    delete process.env.FORTEXA_SHARED_STATE_PATH;
+    delete process.env.NEXUSGUARD_SHARED_STATE_PATH;
     await rm(testFilePath, { force: true });
     resetRedisClient();
     vi.clearAllMocks();
@@ -53,7 +53,7 @@ describe("shared-security-state with Redis & File Fallback", () => {
 
   afterEach(async () => {
     delete process.env.REDIS_URL;
-    delete process.env.FORTEXA_SHARED_STATE_PATH;
+    delete process.env.NEXUSGUARD_SHARED_STATE_PATH;
     await rm(testFilePath, { force: true });
     resetRedisClient();
   });
@@ -61,10 +61,10 @@ describe("shared-security-state with Redis & File Fallback", () => {
   it("isSharedSecurityStateEnabled returns true if either REDIS_URL or PATH is set", () => {
     expect(isSharedSecurityStateEnabled()).toBe(false);
 
-    process.env.FORTEXA_SHARED_STATE_PATH = testFilePath;
+    process.env.NEXUSGUARD_SHARED_STATE_PATH = testFilePath;
     expect(isSharedSecurityStateEnabled()).toBe(true);
 
-    delete process.env.FORTEXA_SHARED_STATE_PATH;
+    delete process.env.NEXUSGUARD_SHARED_STATE_PATH;
     process.env.REDIS_URL = "redis://localhost:6379";
     expect(isSharedSecurityStateEnabled()).toBe(true);
   });
@@ -78,7 +78,7 @@ describe("shared-security-state with Redis & File Fallback", () => {
     await writeSharedRateLimit("test-key", val);
     
     expect(mockSet).toHaveBeenCalledWith(
-      "fortexa:rate-limit:test-key",
+      "nexusguard:rate-limit:test-key",
       JSON.stringify(val),
       "EX",
       expect.any(Number)
@@ -88,19 +88,19 @@ describe("shared-security-state with Redis & File Fallback", () => {
     mockGet.mockResolvedValue(JSON.stringify(val));
     const result = await readSharedRateLimit("test-key");
     expect(result).toEqual(val);
-    expect(mockGet).toHaveBeenCalledWith("fortexa:rate-limit:test-key");
+    expect(mockGet).toHaveBeenCalledWith("nexusguard:rate-limit:test-key");
 
     // Test clear rate limits
-    mockKeys.mockResolvedValue(["fortexa:rate-limit:test-key"]);
+    mockKeys.mockResolvedValue(["nexusguard:rate-limit:test-key"]);
     mockDel.mockResolvedValue(1);
     await clearSharedRateLimits();
-    expect(mockKeys).toHaveBeenCalledWith("fortexa:rate-limit:*");
-    expect(mockDel).toHaveBeenCalledWith(["fortexa:rate-limit:test-key"]);
+    expect(mockKeys).toHaveBeenCalledWith("nexusguard:rate-limit:*");
+    expect(mockDel).toHaveBeenCalledWith(["nexusguard:rate-limit:test-key"]);
   });
 
   it("falls back to file store when Redis is unreachable", async () => {
     process.env.REDIS_URL = "redis://localhost:6379";
-    process.env.FORTEXA_SHARED_STATE_PATH = testFilePath;
+    process.env.NEXUSGUARD_SHARED_STATE_PATH = testFilePath;
 
     // Simulate Redis client initialization
     await readSharedRateLimit("test-key"); // this triggers getRedisClient()
@@ -126,7 +126,7 @@ describe("shared-security-state with Redis & File Fallback", () => {
 
   it("falls back to file store when Redis command throws error", async () => {
     process.env.REDIS_URL = "redis://localhost:6379";
-    process.env.FORTEXA_SHARED_STATE_PATH = testFilePath;
+    process.env.NEXUSGUARD_SHARED_STATE_PATH = testFilePath;
 
     // Force mockSet and mockGet to reject/throw
     mockSet.mockRejectedValue(new Error("Redis write timeout"));

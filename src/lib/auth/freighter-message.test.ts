@@ -26,7 +26,7 @@ function freighterMessageMock(overrides?: {
 describe("signFreighterMessage", () => {
   it("returns ok with base64 signature on success", async () => {
     const result = await signFreighterMessage({
-      message: "Fortexa wallet login",
+      message: "NexusGuard wallet login",
       freighter: freighterMessageMock(),
     });
 
@@ -43,7 +43,7 @@ describe("signFreighterMessage", () => {
     });
 
     const result = await signFreighterMessage({
-      message: "Fortexa wallet login",
+      message: "NexusGuard wallet login",
       freighter,
     });
 
