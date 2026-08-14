@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Minimal NexusGuard observability dashboard. Three panels backed by the metrics exposed at /api/metrics?format=prometheus: request rate by route, error rate by route, and p95 latency by route.",
+  "description": "Minimal Fortexa observability dashboard. Three panels backed by the metrics exposed at /api/metrics?format=prometheus: request rate by route, error rate by route, and p95 latency by route.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -104,7 +104,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (route) (rate(nexusguard_requests_total[5m]))",
+          "expr": "sum by (route) (rate(fortexa_requests_total[5m]))",
           "legendFormat": "{{route}}",
           "range": true,
           "refId": "A"
@@ -204,7 +204,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (route) (rate(nexusguard_request_errors_total[5m])) / sum by (route) (rate(nexusguard_requests_total[5m]))",
+          "expr": "sum by (route) (rate(fortexa_request_errors_total[5m])) / sum by (route) (rate(fortexa_requests_total[5m]))",
           "legendFormat": "{{route}}",
           "range": true,
           "refId": "A"
@@ -218,7 +218,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "p95 latency per route, in milliseconds. Sourced from the nexusguard_request_duration_ms_p95 gauge (per-instance ring buffer, not a true histogram).",
+      "description": "p95 latency per route, in milliseconds. Sourced from the fortexa_request_duration_ms_p95 gauge (per-instance ring buffer, not a true histogram).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -294,7 +294,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max by (route) (nexusguard_request_duration_ms_p95)",
+          "expr": "max by (route) (fortexa_request_duration_ms_p95)",
           "legendFormat": "{{route}}",
           "range": true,
           "refId": "A"
@@ -307,7 +307,7 @@
   "refresh": "30s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["nexusguard", "observability"],
+  "tags": ["fortexa", "observability"],
   "templating": {
     "list": [
       {
@@ -336,8 +336,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "NexusGuard — Minimal",
-  "uid": "nexusguard-minimal",
+  "title": "Fortexa — Minimal",
+  "uid": "fortexa-minimal",
   "version": 1,
   "weekStart": ""
 }

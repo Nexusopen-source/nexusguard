@@ -33,7 +33,7 @@ const pageTitles: Record<string, string> = {
 
 function getPageTitle(pathname: string) {
   if (pathname.startsWith("/settings")) return "Settings";
-  return pageTitles[pathname] ?? "NexusGuard";
+  return pageTitles[pathname] ?? "Fortexa";
 }
 
 function SessionChip({
@@ -111,9 +111,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           href="/"
           className="flex items-center gap-3 border-b border-[hsl(var(--border)/0.5)] px-5 py-5 transition-opacity hover:opacity-80"
         >
-          <Image src="/nexusguard-logo.jpeg" alt="NexusGuard" width={36} height={36} className="rounded-lg" priority />
+          <Image src="/fortexa-logo.jpeg" alt="Fortexa" width={36} height={36} className="rounded-lg" priority />
           <div>
-            <p className="text-sm font-semibold tracking-tight">NexusGuard</p>
+            <p className="text-sm font-semibold tracking-tight">Fortexa</p>
             <p className="text-[10px] uppercase tracking-widest text-[hsl(var(--muted-foreground))]">Control Room</p>
           </div>
         </Link>

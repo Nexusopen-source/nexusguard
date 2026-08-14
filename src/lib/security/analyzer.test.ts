@@ -17,13 +17,13 @@ function makeAction(overrides: Partial<AgentAction> = {}): AgentAction {
 
 describe("evaluateSecurity", () => {
   beforeEach(() => {
-    delete process.env.NEXUSGUARD_BLOCKLIST_URL;
+    delete process.env.FORTEXA_BLOCKLIST_URL;
     resetBlocklistCache();
     vi.restoreAllMocks();
   });
 
   afterEach(() => {
-    delete process.env.NEXUSGUARD_BLOCKLIST_URL;
+    delete process.env.FORTEXA_BLOCKLIST_URL;
     resetBlocklistCache();
   });
 
@@ -143,7 +143,7 @@ describe("evaluateSecurity", () => {
 
   describe("blocklist feed", () => {
     it("flags domain present in JSON blocklist feed", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
       vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
         new Response(JSON.stringify(["bad-actor.com", "scam.io"]), {
           status: 200,
@@ -160,7 +160,7 @@ describe("evaluateSecurity", () => {
     });
 
     it("flags domain present in plain-text blocklist feed", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.txt";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.txt";
       vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
         new Response("# comment\nbad-actor.com\nscam.io\n", { status: 200 }),
       );
@@ -170,7 +170,7 @@ describe("evaluateSecurity", () => {
     });
 
     it("does not flag domain absent from blocklist", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
       vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
         new Response(JSON.stringify(["bad-actor.com"]), { status: 200 }),
       );
@@ -184,7 +184,7 @@ describe("evaluateSecurity", () => {
     });
 
     it("falls back gracefully when feed returns non-200", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
       vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
         new Response("Service Unavailable", { status: 503 }),
       );
@@ -199,7 +199,7 @@ describe("evaluateSecurity", () => {
     });
 
     it("falls back gracefully when fetch throws (network error)", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
       vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
         new Error("Network error"),
       );
@@ -211,14 +211,14 @@ describe("evaluateSecurity", () => {
       expect(result.riskScore).toBe(10);
     });
 
-    it("skips fetch entirely when NEXUSGUARD_BLOCKLIST_URL is not set", async () => {
+    it("skips fetch entirely when FORTEXA_BLOCKLIST_URL is not set", async () => {
       const fetchSpy = vi.spyOn(globalThis, "fetch");
       await evaluateSecurity(makeAction());
       expect(fetchSpy).not.toHaveBeenCalled();
     });
 
     it("serves cached result on second call without re-fetching", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
       const fetchSpy = vi
         .spyOn(globalThis, "fetch")
         .mockResolvedValue(
@@ -234,7 +234,7 @@ describe("evaluateSecurity", () => {
 
   describe("analyzer status tracking", () => {
     it("returns success status when blocklist check succeeds", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
       vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
         new Response(JSON.stringify(["bad-actor.com"]), { status: 200 }),
       );
@@ -246,7 +246,7 @@ describe("evaluateSecurity", () => {
     });
 
     it("returns error status with message when blocklist fetch fails", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
       vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
         new Error("Connection refused"),
       );
@@ -261,8 +261,8 @@ describe("evaluateSecurity", () => {
     });
 
     it("marks as degraded with timeout flag when blocklist fetch times out", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
-      process.env.NEXUSGUARD_BLOCKLIST_TIMEOUT_MS = "1000";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_TIMEOUT_MS = "1000";
 
       // Simulate timeout by making fetch never resolve and then aborting
       const abortError = new Error("The operation was aborted");
@@ -292,7 +292,7 @@ describe("evaluateSecurity", () => {
     });
 
     it("includes degradation reasons in status", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
       vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
         new Error("Network timeout"),
       );
@@ -306,8 +306,8 @@ describe("evaluateSecurity", () => {
 
     it("skips blocklist status when feed URL not configured", async () => {
       // Ensure no URL is set
-      if (process.env.NEXUSGUARD_BLOCKLIST_URL) {
-        delete process.env.NEXUSGUARD_BLOCKLIST_URL;
+      if (process.env.FORTEXA_BLOCKLIST_URL) {
+        delete process.env.FORTEXA_BLOCKLIST_URL;
       }
 
       const result = await evaluateSecurity(makeAction());
@@ -318,7 +318,7 @@ describe("evaluateSecurity", () => {
 
   describe("degraded mode behavior", () => {
     it("still runs local security checks when blocklist fails", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
       vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
         new Error("Network error"),
       );
@@ -335,7 +335,7 @@ describe("evaluateSecurity", () => {
     });
 
     it("returns findings with risk score even when blocklist unavailable", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
       vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
         new Error("HTTP 503"),
       );
@@ -355,7 +355,7 @@ describe("evaluateSecurity", () => {
     });
 
     it("cached blocklist is still used when feed becomes unavailable", async () => {
-      process.env.NEXUSGUARD_BLOCKLIST_URL = "https://example.com/blocklist.json";
+      process.env.FORTEXA_BLOCKLIST_URL = "https://example.com/blocklist.json";
 
       // First request succeeds and caches blocklist
       vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(

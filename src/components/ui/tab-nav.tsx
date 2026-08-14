@@ -12,7 +12,7 @@ export type TabItem = {
 
 export function TabNav({ tabs, activeTab }: { tabs: TabItem[]; activeTab: string }) {
   return (
-    <nav className="flex gap-1 overflow-x-auto rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.35)] p-1 nexusguard-no-scrollbar">
+    <nav className="flex gap-1 overflow-x-auto rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted)/0.35)] p-1 fortexa-no-scrollbar">
       {tabs.map((tab) => {
         const active = tab.id === activeTab;
         return (

@@ -18,9 +18,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 vi.hoisted(() => {
-  const tmpDir = `/tmp/nexusguard-audit-test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  process.env.NEXUSGUARD_STORE_DIR = tmpDir;
-  process.env.NEXUSGUARD_AUTH_SECRET = "audit-test-secret";
+  const tmpDir = `/tmp/fortexa-audit-test-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  process.env.FORTEXA_STORE_DIR = tmpDir;
+  process.env.FORTEXA_AUTH_SECRET = "audit-test-secret";
   delete process.env.DATABASE_URL;
 });
 
@@ -35,7 +35,7 @@ const OTHER_USER = "other-audit-user";
 
 function operatorCookie() {
   const token = createSessionToken({
-    email: "operator@nexusguard.local",
+    email: "operator@fortexa.local",
     role: "operator",
     userId: OPERATOR_USER,
     expiresInSeconds: 120,
@@ -45,7 +45,7 @@ function operatorCookie() {
 
 function viewerCookie() {
   const token = createSessionToken({
-    email: "viewer@nexusguard.local",
+    email: "viewer@fortexa.local",
     role: "viewer",
     userId: VIEWER_USER,
     expiresInSeconds: 120,
@@ -90,8 +90,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const storeDir = process.env.NEXUSGUARD_STORE_DIR;
-  if (storeDir && storeDir.startsWith("/tmp/nexusguard-audit-test-")) {
+  const storeDir = process.env.FORTEXA_STORE_DIR;
+  if (storeDir && storeDir.startsWith("/tmp/fortexa-audit-test-")) {
     await fs.rm(storeDir, { recursive: true, force: true }).catch(() => undefined);
   }
 });
@@ -158,7 +158,7 @@ describe("/api/audit/export route", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
     expect(response.headers.get("Content-Disposition")).toBe(
-      "attachment; filename=nexusguard-audit-all.csv"
+      "attachment; filename=fortexa-audit-all.csv"
     );
   });
 
@@ -286,7 +286,7 @@ describe("/api/audit/export route", () => {
       expect(response.status).toBe(200);
       expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
       expect(response.headers.get("Content-Disposition")).toBe(
-        "attachment; filename=nexusguard-audit-mine.csv"
+        "attachment; filename=fortexa-audit-mine.csv"
       );
 
       const body = await response.text();
@@ -324,7 +324,7 @@ describe("/api/audit/export route", () => {
       expect(response.status).toBe(200);
       expect(response.headers.get("Content-Type")).toBe("text/csv; charset=utf-8");
       expect(response.headers.get("Content-Disposition")).toBe(
-        "attachment; filename=nexusguard-audit-all.csv"
+        "attachment; filename=fortexa-audit-all.csv"
       );
 
       const body = await response.text();

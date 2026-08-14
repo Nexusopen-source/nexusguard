@@ -21,7 +21,7 @@ function getExpectedDecision(id: string) {
   return scenario.expectedDecision;
 }
 
-describe("NexusGuard decision engine - snapshot", () => {
+describe("Fortexa decision engine - snapshot", () => {
   beforeEach(() => {
     vi.useRealTimers();
   });

@@ -1,6 +1,6 @@
-# 🚀 NexusGuard Production Readiness Checklist
+# 🚀 Fortexa Production Readiness Checklist
 
-This document details the operational baseline, hardening criteria, and verification workflows required to promote a NexusGuard deployment safely into a high-availability production environment.
+This document details the operational baseline, hardening criteria, and verification workflows required to promote a Fortexa deployment safely into a high-availability production environment.
 
 ---
 
@@ -35,7 +35,7 @@ This document details the operational baseline, hardening criteria, and verifica
 
 ## 3. Observability, Metrics & Dashboard Setup
 
-NexusGuard includes a Prometheus-compatible data metrics output interface for fast integration into centralized alerting grids.
+Fortexa includes a Prometheus-compatible data metrics output interface for fast integration into centralized alerting grids.
 
 * **Metrics Endpoint:** Exposes live runtime status information metrics on `/metrics`.
 * **Grafana Dashboard Configuration:** * Import our standard production monitoring dashboard via the configuration code template located at `docs/observability/grafana-template.json`.

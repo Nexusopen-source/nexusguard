@@ -26,7 +26,7 @@ type StoredChallenge = WalletChallengeRecord & {
 const challenges = new Map<string, StoredChallenge>();
 
 function getChallengeTtlSeconds() {
-  const parsed = Number(process.env.NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS ?? 300);
+  const parsed = Number(process.env.FORTEXA_AUTH_CHALLENGE_TTL_SECONDS ?? 300);
   if (!Number.isFinite(parsed) || parsed < 30) {
     return 300;
   }
@@ -40,7 +40,7 @@ export function buildChallengeMessage(input: {
 }) {
   const expiresAt = new Date(input.expiresAtMs).toISOString();
   return [
-    "NexusGuard wallet login",
+    "Fortexa wallet login",
     `Challenge: ${input.challengeId}`,
     `Wallet: ${input.publicKey}`,
     `Expires: ${expiresAt}`,

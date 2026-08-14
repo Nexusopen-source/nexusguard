@@ -5,9 +5,9 @@ import { AUTH_COOKIE_KEY, createSessionToken } from "@/lib/auth/session";
 import { POST } from "@/app/api/auth/refresh/route";
 
 function operatorCookie() {
-  process.env.NEXUSGUARD_AUTH_SECRET = "integration-test-secret";
+  process.env.FORTEXA_AUTH_SECRET = "integration-test-secret";
   const token = createSessionToken({
-    email: "operator@nexusguard.local",
+    email: "operator@fortexa.local",
     role: "operator",
     userId: "refresh-operator",
     expiresInSeconds: 120,

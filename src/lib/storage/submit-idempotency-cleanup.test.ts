@@ -3,14 +3,14 @@ import { promises as fs } from "node:fs";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
-  const tmpDir = `/tmp/nexusguard-cleanup-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  process.env.NEXUSGUARD_STORE_DIR = tmpDir;
-  process.env.NEXUSGUARD_AUTH_SECRET = "cleanup-test-secret";
+  const tmpDir = `/tmp/fortexa-cleanup-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  process.env.FORTEXA_STORE_DIR = tmpDir;
+  process.env.FORTEXA_AUTH_SECRET = "cleanup-test-secret";
   delete process.env.DATABASE_URL;
-  delete process.env.NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS;
+  delete process.env.FORTEXA_IDEMPOTENCY_RETENTION_DAYS;
 });
 
-import { getNexusGuardStorePath } from "@/lib/storage/paths";
+import { getFortexaStorePath } from "@/lib/storage/paths";
 import {
   cleanupOldIdempotencyRecords,
   getIdempotencyRetentionDays,
@@ -19,7 +19,7 @@ import {
 } from "@/lib/storage/submit-idempotency-store";
 
 const TEST_USER = "cleanup-test-user";
-const storePath = getNexusGuardStorePath("submit-idempotency.json");
+const storePath = getFortexaStorePath("submit-idempotency.json");
 
 function daysAgo(days: number): string {
   const d = new Date();
@@ -41,7 +41,7 @@ async function writeRecords(
       createdAt: r.createdAt,
     };
   }
-  await fs.mkdir(process.env.NEXUSGUARD_STORE_DIR!, { recursive: true });
+  await fs.mkdir(process.env.FORTEXA_STORE_DIR!, { recursive: true });
   await fs.writeFile(storePath, JSON.stringify(store, null, 2), "utf8");
 }
 
@@ -62,8 +62,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const storeDir = process.env.NEXUSGUARD_STORE_DIR;
-  if (storeDir && storeDir.startsWith("/tmp/nexusguard-cleanup-")) {
+  const storeDir = process.env.FORTEXA_STORE_DIR;
+  if (storeDir && storeDir.startsWith("/tmp/fortexa-cleanup-")) {
     await fs.rm(storeDir, { recursive: true, force: true }).catch(() => undefined);
   }
 });
@@ -73,20 +73,20 @@ describe("getIdempotencyRetentionDays", () => {
     expect(getIdempotencyRetentionDays()).toBe(7);
   });
 
-  it("reads NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS when set", () => {
-    process.env.NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS = "14";
+  it("reads FORTEXA_IDEMPOTENCY_RETENTION_DAYS when set", () => {
+    process.env.FORTEXA_IDEMPOTENCY_RETENTION_DAYS = "14";
     expect(getIdempotencyRetentionDays()).toBe(14);
-    delete process.env.NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS;
+    delete process.env.FORTEXA_IDEMPOTENCY_RETENTION_DAYS;
   });
 
   it("rejects invalid values and falls back to default", () => {
-    process.env.NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS = "invalid";
+    process.env.FORTEXA_IDEMPOTENCY_RETENTION_DAYS = "invalid";
     expect(getIdempotencyRetentionDays()).toBe(7);
-    process.env.NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS = "0";
+    process.env.FORTEXA_IDEMPOTENCY_RETENTION_DAYS = "0";
     expect(getIdempotencyRetentionDays()).toBe(7);
-    process.env.NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS = "-1";
+    process.env.FORTEXA_IDEMPOTENCY_RETENTION_DAYS = "-1";
     expect(getIdempotencyRetentionDays()).toBe(7);
-    delete process.env.NEXUSGUARD_IDEMPOTENCY_RETENTION_DAYS;
+    delete process.env.FORTEXA_IDEMPOTENCY_RETENTION_DAYS;
   });
 });
 

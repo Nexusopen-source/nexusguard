@@ -24,7 +24,7 @@ type RedactionConfig = {
 const ENV_SENSITIVE_KEYS: string[] = (
   (globalThis as unknown as {
     process?: { env?: Record<string, string | undefined> };
-  }).process?.env?.NEXUSGUARD_AUDIT_EXPORT_SENSITIVE_KEYS ?? ""
+  }).process?.env?.FORTEXA_AUDIT_EXPORT_SENSITIVE_KEYS ?? ""
 )
   .split(",")
   .map((s: string) => s.trim())

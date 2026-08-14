@@ -1,11 +1,11 @@
-# 🏗️ NexusGuard Architecture
+# 🏗️ Fortexa Architecture
 
 > This document describes the architecture **as currently implemented in this repository**, not an idealized target state.
 > This file is intended for technical reviewers; see `README.md` for product framing and demo-first flow.
 
 ## 1) 🎯 System Purpose
 
-NexusGuard is a policy-controlled payment firewall for agent-triggered actions on Stellar.  
+Fortexa is a policy-controlled payment firewall for agent-triggered actions on Stellar.  
 It inserts a decision layer between agent intent and transaction submission.
 
 Core intent:
@@ -49,7 +49,7 @@ flowchart LR
   AUD --> DB
   AUTH --> DB
 
-  POL --> FILE[JSON fallback\nlocal .nexusguard / Vercel /tmp/nexusguard]
+  POL --> FILE[JSON fallback\nlocal .fortexa / Vercel /tmp/fortexa]
   AUD --> FILE
   AUTH --> FILE
 
@@ -66,7 +66,7 @@ flowchart TB
     WalletExt[Wallet Extension\n(Freighter etc.)]
   end
 
-  subgraph AppBoundary[NexusGuard Application Boundary]
+  subgraph AppBoundary[Fortexa Application Boundary]
     WebUI[Next.js UI]
     ApiRoutes[API Routes + Validation]
     Authz[Session + Role Authorization]
@@ -94,7 +94,7 @@ flowchart TB
 ## 4) 🧩 Runtime Building Blocks
 
 - `src/app/api/auth/*`: wallet login, session issue/refresh/logout/session lookup.
-- `src/lib/auth/session.ts`: signed cookie session token (`nexusguard_session`).
+- `src/lib/auth/session.ts`: signed cookie session token (`fortexa_session`).
 - `src/lib/auth/require-auth.ts`: role-based auth guard for protected APIs.
 - `src/app/api/decision/route.ts`: evaluates action, applies optional human-approval override, appends audit record.
 - `src/app/api/policy/simulate/route.ts`: read-only pre-save check; compares current vs proposed policy decisions without persisting.
@@ -119,7 +119,7 @@ flowchart TB
 4. Client posts `publicKey`, `challengeId`, and `signature` to `/api/auth/login`.
 5. Server verifies signature, enforces challenge expiry + one-time use, then resolves role via allowlists.
 6. Lockout + rate-limit checks apply on login verification failures.
-7. Session token is issued in `nexusguard_session` cookie.
+7. Session token is issued in `fortexa_session` cookie.
 8. Wallet mapping is upserted for that `userId`.
 
 Honest note: if both allowlists are empty, current behavior allows any valid wallet as `operator` (developer-friendly, not production-safe).
@@ -155,7 +155,7 @@ sequenceDiagram
       else Authorized wallet
         API->>UW: upsertUserWallet(userId, publicKey)
         API->>AUTH: createSessionToken(userId, role)
-        API-->>U: 200 + nexusguard_session cookie
+        API-->>U: 200 + fortexa_session cookie
       end
     end
   end
@@ -232,31 +232,31 @@ It does not enable arbitrary manual wallet linking; it syncs the wallet already 
 
 ```mermaid
 erDiagram
-  NEXUSGUARD_POLICY_STATE ||--o{ NEXUSGUARD_POLICY_HISTORY : versions
-  NEXUSGUARD_USAGE ||--o{ NEXUSGUARD_AUDIT_ENTRIES : per_user
+  FORTEXA_POLICY_STATE ||--o{ FORTEXA_POLICY_HISTORY : versions
+  FORTEXA_USAGE ||--o{ FORTEXA_AUDIT_ENTRIES : per_user
 
-  NEXUSGUARD_POLICY_STATE {
+  FORTEXA_POLICY_STATE {
     int id PK
     int version
     timestamptz updated_at
     jsonb policy
   }
 
-  NEXUSGUARD_POLICY_HISTORY {
+  FORTEXA_POLICY_HISTORY {
     int version PK
     timestamptz updated_at
     text updated_by
     jsonb policy
   }
 
-  NEXUSGUARD_USAGE {
+  FORTEXA_USAGE {
     text user_id PK
     numeric spent_xlm
     int tool_calls
     timestamptz last_updated
   }
 
-  NEXUSGUARD_AUDIT_ENTRIES {
+  FORTEXA_AUDIT_ENTRIES {
     uuid id PK
     text user_id
     timestamptz timestamp
@@ -264,7 +264,7 @@ erDiagram
     text entry_hash
   }
 
-  NEXUSGUARD_USER_WALLETS {
+  FORTEXA_USER_WALLETS {
     text user_id PK
     text public_key
     text source
@@ -280,7 +280,7 @@ Each audit entry appended via `appendAuditEntry` is enriched with two fields bef
 - **`previousHash`** — the `entryHash` of the most recent already-stored entry for the same user, or the 64-zero genesis sentinel (`0000…0000`) if no prior hashed entry exists.
 - **`entryHash`** — a SHA-256 hex digest computed over a canonicalized JSON object that includes `id`, `timestamp`, `action`, `decision`, `explanation`, `triggeredPolicies`, `riskFindings`, `stellarTxHash`, and `previousHash`. All object keys are sorted before hashing to guarantee DB-stored and file-stored entries produce identical digests.
 
-The `entry_hash` column on `NEXUSGUARD_AUDIT_ENTRIES` (migration `002_audit_hash_chain`) holds this value for fast lookup of the previous hash during inserts.
+The `entry_hash` column on `FORTEXA_AUDIT_ENTRIES` (migration `002_audit_hash_chain`) holds this value for fast lookup of the previous hash during inserts.
 
 **Verification** — `verifyHashChain(entries)` (`src/lib/audit/hash-chain.ts`):
 
@@ -301,9 +301,9 @@ Limitations: the chain is append-only tamper evidence, not a cryptographically s
 
 - If `DATABASE_URL` is set and DB is reachable: uses Postgres tables.
 - On DB unavailability or operation failure: falls back to local JSON files.
-  - local/dev default: `.nexusguard/`
-  - Vercel default: `/tmp/nexusguard/`
-  - optional override: `NEXUSGUARD_STORE_DIR`
+  - local/dev default: `.fortexa/`
+  - Vercel default: `/tmp/fortexa/`
+  - optional override: `FORTEXA_STORE_DIR`
 
 This fallback is intentional for local resilience, but introduces consistency tradeoffs in multi-instance deployments.
 
@@ -321,7 +321,7 @@ Stored policy JSON (current state + history) can outlive the active schema. To p
 - Older payloads missing *only* documented optional fields are migrated by `parseStoredPolicy` (`src/lib/policy/migrations.ts`), which fills the safe defaults listed in `OPTIONAL_DEFAULTS` and reports the exact set of migrations applied.
 - Malformed payloads (wrong types, unsafe values, mixes of missing-optional and non-rectifiable issues) fail closed with a structured `{ ok: false, error, issues }` result. Every Zod issue is surfaced with its path and message — no defaults are silently substituted for non-optional fields.
 - The strict schema is never weakened for backwards compatibility. Migrating a new optional field is an explicit one-line change to `OPTIONAL_DEFAULTS` plus a corresponding fixture under `src/lib/policy/__fixtures__/`.
-- `parseStoredPolicy` is a pure helper: it does not read or rewrite `.nexusguard/` policy files. Callers decide whether to persist a migrated policy, reject one, or surface the error.
+- `parseStoredPolicy` is a pure helper: it does not read or rewrite `.fortexa/` policy files. Callers decide whether to persist a migrated policy, reject one, or surface the error.
 - Smoke coverage lives at `src/lib/policy/migrations.test.ts`.
 
 ## 7) 🔐 Security and Trust Boundaries
@@ -338,7 +338,7 @@ Stored policy JSON (current state + history) can outlive the active schema. To p
 
 - Per-route rate limiting (`src/lib/security/rate-limit.ts`)
 - Login lockout on repeated failures (`src/lib/auth/login-lockout.ts`)
-- Optional shared file-backed state (`NEXUSGUARD_SHARED_STATE_PATH`) for cross-process limiter/lockout state
+- Optional shared file-backed state (`FORTEXA_SHARED_STATE_PATH`) for cross-process limiter/lockout state
 - Role gating (`requireAuth`) for sensitive APIs
 
 ### 7.3 Controls not present (yet)

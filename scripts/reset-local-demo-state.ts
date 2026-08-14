@@ -5,15 +5,15 @@ import { Pool } from "pg";
 import Redis from "ioredis";
 
 import { defaultPolicyConfig } from "../src/lib/policy/engine";
-import { getNexusGuardStoreDir } from "../src/lib/storage/paths";
+import { getFortexaStoreDir } from "../src/lib/storage/paths";
 
 export interface ResetOptions {
   dryRun?: boolean;
-  allowLocalReset?: boolean; // Mock for process.env.NEXUSGUARD_ALLOW_LOCAL_RESET
+  allowLocalReset?: boolean; // Mock for process.env.FORTEXA_ALLOW_LOCAL_RESET
   yesFlag?: boolean; // Mock for process.argv.includes("--yes")
   databaseUrl?: string; // Mock for process.env.DATABASE_URL
   redisUrl?: string; // Mock for process.env.REDIS_URL
-  sharedStatePath?: string; // Mock for process.env.NEXUSGUARD_SHARED_STATE_PATH
+  sharedStatePath?: string; // Mock for process.env.FORTEXA_SHARED_STATE_PATH
   storeDir?: string; // Mock for store directory
   log?: (msg: string) => void;
   errorLog?: (msg: string) => void;
@@ -91,13 +91,13 @@ export async function runReset(options: ResetOptions = {}): Promise<{ success: b
   const errorLog = options.errorLog ?? console.error;
 
   // Resolve environment and flags
-  const allowLocalReset = options.allowLocalReset ?? (process.env.NEXUSGUARD_ALLOW_LOCAL_RESET === "true");
+  const allowLocalReset = options.allowLocalReset ?? (process.env.FORTEXA_ALLOW_LOCAL_RESET === "true");
   const yesFlag = options.yesFlag ?? process.argv.includes("--yes");
   const databaseUrl = options.databaseUrl ?? process.env.DATABASE_URL;
   const redisUrl = options.redisUrl ?? process.env.REDIS_URL;
-  const storeDir = options.storeDir ?? getNexusGuardStoreDir();
+  const storeDir = options.storeDir ?? getFortexaStoreDir();
 
-  const rawSharedState = options.sharedStatePath ?? process.env.NEXUSGUARD_SHARED_STATE_PATH;
+  const rawSharedState = options.sharedStatePath ?? process.env.FORTEXA_SHARED_STATE_PATH;
   let sharedStatePath: string | null = null;
   if (rawSharedState?.trim()) {
     const configured = rawSharedState.trim();
@@ -115,7 +115,7 @@ export async function runReset(options: ResetOptions = {}): Promise<{ success: b
   // Dry-run mode by default
   const isDryRun = options.dryRun ?? !(allowLocalReset && yesFlag);
 
-  log(`=== NexusGuard Local Demo State Reset (${isDryRun ? "DRY-RUN" : "APPLY MODE"}) ===\n`);
+  log(`=== Fortexa Local Demo State Reset (${isDryRun ? "DRY-RUN" : "APPLY MODE"}) ===\n`);
 
   // Target files collection
   const fileTargets = [
@@ -146,12 +146,12 @@ export async function runReset(options: ResetOptions = {}): Promise<{ success: b
 
   // Target Database Tables collection
   const tables = [
-    "nexusguard_wallets",
-    "nexusguard_audit_entries",
-    "nexusguard_usage",
-    "nexusguard_policy_state",
-    "nexusguard_policy_history",
-    "nexusguard_submit_idempotency",
+    "fortexa_wallets",
+    "fortexa_audit_entries",
+    "fortexa_usage",
+    "fortexa_policy_state",
+    "fortexa_policy_history",
+    "fortexa_submit_idempotency",
   ];
 
   let pool: Pool | null = null;
@@ -198,16 +198,16 @@ export async function runReset(options: ResetOptions = {}): Promise<{ success: b
           maxRetriesPerRequest: 0,
           enableOfflineQueue: false,
         });
-        targetRedisKeys = await redisClient.keys("nexusguard:*");
+        targetRedisKeys = await redisClient.keys("fortexa:*");
         redisKeysCount = targetRedisKeys.length;
-        log(`- Redis keys matching 'nexusguard:*': ${redisKeysCount} keys found - WILL BE DELETED`);
+        log(`- Redis keys matching 'fortexa:*': ${redisKeysCount} keys found - WILL BE DELETED`);
       } catch {
         redisKeysCount = "Unable to connect";
-        log(`- Redis keys matching 'nexusguard:*': unable to query Redis`);
+        log(`- Redis keys matching 'fortexa:*': unable to query Redis`);
       }
     } else {
       redisKeysCount = "Non-local Redis URL (skipped)";
-      log(`- Redis keys matching 'nexusguard:*': non-local Redis skipped for safety`);
+      log(`- Redis keys matching 'fortexa:*': non-local Redis skipped for safety`);
     }
     log("");
   }
@@ -231,19 +231,19 @@ export async function runReset(options: ResetOptions = {}): Promise<{ success: b
   if (isDryRun) {
     let refusalReason = "";
     if (!allowLocalReset && !yesFlag) {
-      refusalReason = "Missing env variable NEXUSGUARD_ALLOW_LOCAL_RESET=true and CLI flag --yes.";
+      refusalReason = "Missing env variable FORTEXA_ALLOW_LOCAL_RESET=true and CLI flag --yes.";
     } else if (!allowLocalReset) {
-      refusalReason = "Missing env variable NEXUSGUARD_ALLOW_LOCAL_RESET=true.";
+      refusalReason = "Missing env variable FORTEXA_ALLOW_LOCAL_RESET=true.";
     } else if (!yesFlag) {
       refusalReason = "Missing CLI flag --yes.";
     }
 
     log(`*** NO CHANGES WERE APPLIED (Dry-run mode) ***`);
     log("To perform the actual reset, ensure BOTH:");
-    log("1. Environment variable NEXUSGUARD_ALLOW_LOCAL_RESET=true is set.");
+    log("1. Environment variable FORTEXA_ALLOW_LOCAL_RESET=true is set.");
     log("2. CLI flag --yes is passed.\n");
     log("Command example:");
-    log("NEXUSGUARD_ALLOW_LOCAL_RESET=true npx tsx scripts/reset-local-demo-state.ts --yes");
+    log("FORTEXA_ALLOW_LOCAL_RESET=true npx tsx scripts/reset-local-demo-state.ts --yes");
 
     if (pool) {
       await pool.end().catch(() => {});
@@ -284,16 +284,16 @@ export async function runReset(options: ResetOptions = {}): Promise<{ success: b
       const now = new Date().toISOString();
       const policyJson = JSON.stringify(defaultPolicyConfig);
 
-      // Check if nexusguard_policy_state and nexusguard_policy_history tables exist
+      // Check if fortexa_policy_state and fortexa_policy_history tables exist
       await pool.query(
-        `INSERT INTO nexusguard_policy_state (id, version, updated_at, policy)
+        `INSERT INTO fortexa_policy_state (id, version, updated_at, policy)
          VALUES (1, 1, $1::timestamptz, $2::jsonb)
          ON CONFLICT (id) DO UPDATE SET version = 1, updated_at = $1::timestamptz, policy = $2::jsonb`,
         [now, policyJson]
       );
 
       await pool.query(
-        `INSERT INTO nexusguard_policy_history (version, updated_at, updated_by, policy)
+        `INSERT INTO fortexa_policy_history (version, updated_at, updated_by, policy)
          VALUES (1, $1::timestamptz, 'system-bootstrap', $2::jsonb)
          ON CONFLICT (version) DO NOTHING`,
         [now, policyJson]
@@ -311,7 +311,7 @@ export async function runReset(options: ResetOptions = {}): Promise<{ success: b
   if (redisClient && targetRedisKeys.length > 0) {
     try {
       await redisClient.del(...targetRedisKeys);
-      log(`[Redis] Deleted ${targetRedisKeys.length} keys matching 'nexusguard:*'`);
+      log(`[Redis] Deleted ${targetRedisKeys.length} keys matching 'fortexa:*'`);
     } catch {
       errorLog("[Redis] Failed to delete keys");
     }

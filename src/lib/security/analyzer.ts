@@ -21,7 +21,7 @@ export const defaultAnalyzerConfig: AnalyzerConfig = {
 function getAnalyzerConfig(): AnalyzerConfig {
   return {
     blocklistTimeoutMs: parseInt(
-      process.env.NEXUSGUARD_BLOCKLIST_TIMEOUT_MS || "5000",
+      process.env.FORTEXA_BLOCKLIST_TIMEOUT_MS || "5000",
       10,
     ),
   };

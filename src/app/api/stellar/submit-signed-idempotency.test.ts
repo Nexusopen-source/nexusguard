@@ -3,9 +3,9 @@ import { promises as fs } from "node:fs";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
-  const tmpDir = `/tmp/nexusguard-idem-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  process.env.NEXUSGUARD_STORE_DIR = tmpDir;
-  process.env.NEXUSGUARD_AUTH_SECRET = "idem-test-secret";
+  const tmpDir = `/tmp/fortexa-idem-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  process.env.FORTEXA_STORE_DIR = tmpDir;
+  process.env.FORTEXA_AUTH_SECRET = "idem-test-secret";
   process.env.STELLAR_HORIZON_URL = "https://horizon-mock.test";
   delete process.env.DATABASE_URL;
 });
@@ -52,7 +52,7 @@ const OPERATOR_WALLET_KEYPAIR = Keypair.random();
 
 function operatorCookie() {
   const token = createSessionToken({
-    email: "idem-operator@nexusguard.local",
+    email: "idem-operator@fortexa.local",
     role: "operator",
     userId: OPERATOR_USER_ID,
     expiresInSeconds: 300,
@@ -112,8 +112,8 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  const storeDir = process.env.NEXUSGUARD_STORE_DIR;
-  if (storeDir && storeDir.startsWith("/tmp/nexusguard-idem-")) {
+  const storeDir = process.env.FORTEXA_STORE_DIR;
+  if (storeDir && storeDir.startsWith("/tmp/fortexa-idem-")) {
     await fs.rm(storeDir, { recursive: true, force: true }).catch(() => undefined);
   }
 });

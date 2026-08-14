@@ -35,7 +35,7 @@ describe("observability metrics", () => {
 
     const output = toPrometheusText();
 
-    expect(output).toContain("nexusguard_requests_total");
+    expect(output).toContain("fortexa_requests_total");
     expect(output).toContain('route="/api/policy"');
   });
 
@@ -85,9 +85,9 @@ describe("observability metrics", () => {
     recordStellarSubmitResult("success");
 
     const output = toPrometheusText();
-    expect(output).toContain("nexusguard_decision_outcomes_total");
+    expect(output).toContain("fortexa_decision_outcomes_total");
     expect(output).toContain('outcome="APPROVE"');
-    expect(output).toContain("nexusguard_stellar_submit_results_total");
+    expect(output).toContain("fortexa_stellar_submit_results_total");
     expect(output).toContain('result="success"');
   });
 

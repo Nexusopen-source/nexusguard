@@ -17,9 +17,9 @@ export default function LoginPage() {
       <div className="relative grid w-full max-w-4xl gap-12 lg:grid-cols-2 lg:items-center">
         <section className="space-y-6">
           <Link href="/" className="inline-flex items-center gap-3 transition-opacity hover:opacity-80">
-            <Image src="/nexusguard-logo.jpeg" alt="NexusGuard" width={48} height={48} className="rounded-xl" priority />
+            <Image src="/fortexa-logo.jpeg" alt="Fortexa" width={48} height={48} className="rounded-xl" priority />
             <div>
-              <p className="text-lg font-semibold">NexusGuard</p>
+              <p className="text-lg font-semibold">Fortexa</p>
               <p className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))]">Control Room</p>
             </div>
           </Link>

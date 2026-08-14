@@ -109,10 +109,10 @@ describe("redactSensitiveFields", () => {
     expect(output).toEqual({ authorization: "[REDACTED]" });
   });
 
-  it("redacts cookie and nexusguard_session keys", () => {
-    const input = { cookie: "session=abc", nexusguard_session: "xyz" };
+  it("redacts cookie and fortexa_session keys", () => {
+    const input = { cookie: "session=abc", fortexa_session: "xyz" };
     const output = redactSensitiveFields(input);
-    expect(output).toEqual({ cookie: "[REDACTED]", nexusguard_session: "[REDACTED]" });
+    expect(output).toEqual({ cookie: "[REDACTED]", fortexa_session: "[REDACTED]" });
   });
 
   it("redacts GROQ_API_KEY regardless of casing", () => {

@@ -3,9 +3,9 @@ import { promises as fs } from "node:fs";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.hoisted(() => {
-  const tmpDir = `/tmp/nexusguard-e2e-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  process.env.NEXUSGUARD_STORE_DIR = tmpDir;
-  process.env.NEXUSGUARD_AUTH_SECRET = "e2e-test-secret";
+  const tmpDir = `/tmp/fortexa-e2e-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  process.env.FORTEXA_STORE_DIR = tmpDir;
+  process.env.FORTEXA_AUTH_SECRET = "e2e-test-secret";
   process.env.STELLAR_HORIZON_URL = "https://horizon-mock.test";
   delete process.env.DATABASE_URL;
 });
@@ -57,7 +57,7 @@ const OPERATOR_USER_ID = "e2e-operator-id";
 
 function operatorCookie() {
   const token = createSessionToken({
-    email: "e2e-operator@nexusguard.local",
+    email: "e2e-operator@fortexa.local",
     role: "operator",
     userId: OPERATOR_USER_ID,
     expiresInSeconds: 300,
@@ -100,8 +100,8 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  const storeDir = process.env.NEXUSGUARD_STORE_DIR;
-  if (storeDir && storeDir.startsWith("/tmp/nexusguard-e2e-")) {
+  const storeDir = process.env.FORTEXA_STORE_DIR;
+  if (storeDir && storeDir.startsWith("/tmp/fortexa-e2e-")) {
     await fs.rm(storeDir, { recursive: true, force: true }).catch(() => undefined);
   }
 });

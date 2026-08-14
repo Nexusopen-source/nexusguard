@@ -10,7 +10,7 @@ const testPolicy: PolicyConfig = {
   allowedHours: undefined,
 };
 
-describe("NexusGuard decision engine", () => {
+describe("Fortexa decision engine", () => {
   it("ensures all demo scenario ids are unique", () => {
     const ids = demoScenarios.map((s) => s.id);
     const uniqueIds = new Set(ids);

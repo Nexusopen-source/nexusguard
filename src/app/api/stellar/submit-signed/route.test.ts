@@ -201,13 +201,13 @@ describe("POST /api/stellar/submit-signed - source wallet verification", () => {
 });
 
 function setupSecret() {
-  process.env.NEXUSGUARD_AUTH_SECRET = "integration-test-secret";
+  process.env.FORTEXA_AUTH_SECRET = "integration-test-secret";
 }
 
 function viewerCookie() {
   setupSecret();
   const token = createSessionToken({
-    email: "viewer@nexusguard.local",
+    email: "viewer@fortexa.local",
     role: "viewer",
     userId: "submit-viewer-id",
     expiresInSeconds: 120,

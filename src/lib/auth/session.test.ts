@@ -4,10 +4,10 @@ import { createSessionToken, verifySessionToken } from "@/lib/auth/session";
 
 describe("auth session", () => {
   it("creates and verifies a valid token", () => {
-    process.env.NEXUSGUARD_AUTH_SECRET = "unit-test-secret";
+    process.env.FORTEXA_AUTH_SECRET = "unit-test-secret";
 
     const token = createSessionToken({
-      email: "operator@nexusguard.local",
+      email: "operator@fortexa.local",
       role: "operator",
       userId: "user-123",
       expiresInSeconds: 60,
@@ -16,16 +16,16 @@ describe("auth session", () => {
     const session = verifySessionToken(token);
 
     expect(session).not.toBeNull();
-    expect(session?.email).toBe("operator@nexusguard.local");
+    expect(session?.email).toBe("operator@fortexa.local");
     expect(session?.role).toBe("operator");
     expect(session?.userId).toBe("user-123");
   });
 
   it("rejects tampered token", () => {
-    process.env.NEXUSGUARD_AUTH_SECRET = "unit-test-secret";
+    process.env.FORTEXA_AUTH_SECRET = "unit-test-secret";
 
     const token = createSessionToken({
-      email: "viewer@nexusguard.local",
+      email: "viewer@fortexa.local",
       role: "viewer",
       userId: "user-xyz",
       expiresInSeconds: 60,

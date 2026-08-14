@@ -41,8 +41,8 @@ export default function LandingPage() {
       <section className="relative mx-auto flex min-h-[90vh] max-w-6xl flex-col items-center justify-start px-6 pb-20 pt-[14vh] text-center md:pt-[18vh]">
         <div className="animate-fade-up mb-6 flex flex-col items-center gap-5">
           <Image
-            src="/nexusguard-logo.jpeg"
-            alt="NexusGuard"
+            src="/fortexa-logo.jpeg"
+            alt="Fortexa"
             width={72}
             height={72}
             className="rounded-2xl shadow-[0_0_48px_-8px_hsl(var(--accent)/0.45)]"
@@ -50,7 +50,7 @@ export default function LandingPage() {
           />
           <div className="space-y-3">
             <h1 className="text-6xl font-semibold tracking-tight md:text-8xl">
-              <span className="text-gradient">NexusGuard</span>
+              <span className="text-gradient">Fortexa</span>
             </h1>
             <p className="text-xs font-medium uppercase tracking-[0.28em] text-[hsl(var(--muted-foreground))] md:text-sm">
               Agentic Payment Firewall on Stellar
@@ -157,7 +157,7 @@ export default function LandingPage() {
             </div>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">No server-side signing. Ever.</h2>
             <p className="mt-4 text-[hsl(var(--muted-foreground))]">
-              NexusGuard evaluates policy and risk, builds unsigned XDR, and your wallet signs. Private keys never leave the client.
+              Fortexa evaluates policy and risk, builds unsigned XDR, and your wallet signs. Private keys never leave the client.
             </p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t border-[hsl(var(--border)/0.5)] py-8 text-center text-sm text-[hsl(var(--muted-foreground))]">
-        NexusGuard · Policy-controlled payment firewall on Stellar
+        Fortexa · Policy-controlled payment firewall on Stellar
       </footer>
     </main>
     </>

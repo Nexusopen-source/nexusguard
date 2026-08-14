@@ -5,9 +5,9 @@ import { AUTH_COOKIE_KEY, createSessionToken } from "@/lib/auth/session";
 import { POST } from "@/app/api/decision/route";
 
 function operatorCookie() {
-  process.env.NEXUSGUARD_AUTH_SECRET = "integration-test-secret";
+  process.env.FORTEXA_AUTH_SECRET = "integration-test-secret";
   const token = createSessionToken({
-    email: "operator@nexusguard.local",
+    email: "operator@fortexa.local",
     role: "operator",
     userId: "decision-operator-id",
     expiresInSeconds: 120,
@@ -17,9 +17,9 @@ function operatorCookie() {
 }
 
 function viewerCookie() {
-  process.env.NEXUSGUARD_AUTH_SECRET = "integration-test-secret";
+  process.env.FORTEXA_AUTH_SECRET = "integration-test-secret";
   const token = createSessionToken({
-    email: "viewer@nexusguard.local",
+    email: "viewer@fortexa.local",
     role: "viewer",
     userId: "decision-viewer-id",
     expiresInSeconds: 120,

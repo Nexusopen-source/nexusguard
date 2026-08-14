@@ -14,7 +14,7 @@ type LockoutRecord = {
 const records = new Map<string, LockoutRecord>();
 
 function getMaxAttempts() {
-  const parsed = Number(process.env.NEXUSGUARD_AUTH_MAX_ATTEMPTS ?? 5);
+  const parsed = Number(process.env.FORTEXA_AUTH_MAX_ATTEMPTS ?? 5);
   if (!Number.isFinite(parsed) || parsed < 1) {
     return 5;
   }
@@ -22,7 +22,7 @@ function getMaxAttempts() {
 }
 
 function getLockMinutes() {
-  const parsed = Number(process.env.NEXUSGUARD_AUTH_LOCK_MINUTES ?? 10);
+  const parsed = Number(process.env.FORTEXA_AUTH_LOCK_MINUTES ?? 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
     return 10;
   }

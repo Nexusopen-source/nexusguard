@@ -2,11 +2,11 @@ import { promises as fs } from "node:fs";
 
 import { defaultPolicyConfig } from "@/lib/policy/engine";
 import { runWithDatabase } from "@/lib/storage/db";
-import { getNexusGuardStoreDir, getNexusGuardStorePath } from "@/lib/storage/paths";
+import { getFortexaStoreDir, getFortexaStorePath } from "@/lib/storage/paths";
 import type { PolicyConfig } from "@/lib/types/domain";
 
-const storePath = getNexusGuardStorePath("policy.json");
-const historyPath = getNexusGuardStorePath("policy-history.json");
+const storePath = getFortexaStorePath("policy.json");
+const historyPath = getFortexaStorePath("policy-history.json");
 
 type PolicyStoreFile = {
   policy: PolicyConfig;
@@ -53,7 +53,7 @@ type PolicyHistoryFile = {
 };
 
 async function ensureStore() {
-  await fs.mkdir(getNexusGuardStoreDir(), { recursive: true });
+  await fs.mkdir(getFortexaStoreDir(), { recursive: true });
   try {
     await fs.access(storePath);
   } catch {
@@ -166,7 +166,7 @@ async function ensureDbPolicyState() {
     }>(
       `
         SELECT version
-        FROM nexusguard_policy_state
+        FROM fortexa_policy_state
         WHERE id = 1
       `
     );
@@ -179,7 +179,7 @@ async function ensureDbPolicyState() {
 
     await pool.query(
       `
-        INSERT INTO nexusguard_policy_state (id, version, updated_at, policy)
+        INSERT INTO fortexa_policy_state (id, version, updated_at, policy)
         VALUES (1, 1, $1::timestamptz, $2::jsonb)
       `,
       [now, JSON.stringify(defaultPolicyConfig)]
@@ -187,7 +187,7 @@ async function ensureDbPolicyState() {
 
     await pool.query(
       `
-        INSERT INTO nexusguard_policy_history (version, updated_at, updated_by, policy)
+        INSERT INTO fortexa_policy_history (version, updated_at, updated_by, policy)
         VALUES (1, $1::timestamptz, 'system-bootstrap', $2::jsonb)
         ON CONFLICT (version) DO NOTHING
       `,
@@ -207,7 +207,7 @@ export async function getPolicyConfig() {
       }>(
         `
           SELECT policy, updated_at, version
-          FROM nexusguard_policy_state
+          FROM fortexa_policy_state
           WHERE id = 1
         `
       );
@@ -259,7 +259,7 @@ export async function updatePolicyConfig(
       }>(
         `
           SELECT version, updated_at
-          FROM nexusguard_policy_state
+          FROM fortexa_policy_state
           WHERE id = 1
         `
       );
@@ -288,7 +288,7 @@ export async function updatePolicyConfig(
       const updateResult = expectedVersion === undefined
         ? await pool.query(
             `
-              UPDATE nexusguard_policy_state
+              UPDATE fortexa_policy_state
               SET version = $1,
                   updated_at = $2::timestamptz,
                   policy = $3::jsonb
@@ -298,7 +298,7 @@ export async function updatePolicyConfig(
           )
         : await pool.query(
             `
-              UPDATE nexusguard_policy_state
+              UPDATE fortexa_policy_state
               SET version = $1,
                   updated_at = $2::timestamptz,
                   policy = $3::jsonb
@@ -316,7 +316,7 @@ export async function updatePolicyConfig(
         }>(
           `
             SELECT version, updated_at
-            FROM nexusguard_policy_state
+            FROM fortexa_policy_state
             WHERE id = 1
           `
         );
@@ -335,7 +335,7 @@ export async function updatePolicyConfig(
       // guarantees conflicting saves never pollute the version history.
       await pool.query(
         `
-          INSERT INTO nexusguard_policy_history (version, updated_at, updated_by, policy)
+          INSERT INTO fortexa_policy_history (version, updated_at, updated_by, policy)
           VALUES ($1, $2::timestamptz, $3, $4::jsonb)
         `,
         [nextVersion, now, updatedBy ?? null, JSON.stringify(normalized)]
@@ -399,7 +399,7 @@ export async function getPolicyHistory(limit = 20) {
       }>(
         `
           SELECT version, updated_at, updated_by, policy
-          FROM nexusguard_policy_history
+          FROM fortexa_policy_history
           ORDER BY version DESC
           LIMIT $1
         `,
@@ -436,7 +436,7 @@ export async function getPolicyVersionByNumber(targetVersion: number) {
       }>(
         `
           SELECT version, updated_at, updated_by, policy
-          FROM nexusguard_policy_history
+          FROM fortexa_policy_history
           WHERE version = $1
           LIMIT 1
         `,
@@ -486,7 +486,7 @@ export async function rollbackPolicyVersion(targetVersion: number, updatedBy?: s
       const result = await pool.query<{ policy: PolicyConfig }>(
         `
           SELECT policy
-          FROM nexusguard_policy_history
+          FROM fortexa_policy_history
           WHERE version = $1
           LIMIT 1
         `,
@@ -504,7 +504,7 @@ export async function rollbackPolicyVersion(targetVersion: number, updatedBy?: s
       const current = await pool.query<{ version: number }>(
         `
           SELECT version
-          FROM nexusguard_policy_state
+          FROM fortexa_policy_state
           WHERE id = 1
         `
       );
@@ -513,7 +513,7 @@ export async function rollbackPolicyVersion(targetVersion: number, updatedBy?: s
 
       await pool.query(
         `
-          INSERT INTO nexusguard_policy_history (version, updated_at, updated_by, policy)
+          INSERT INTO fortexa_policy_history (version, updated_at, updated_by, policy)
           VALUES ($1, $2::timestamptz, $3, $4::jsonb)
         `,
         [nextVersion, now, updatedBy ?? `rollback:${targetVersion}`, JSON.stringify(normalized)]
@@ -521,7 +521,7 @@ export async function rollbackPolicyVersion(targetVersion: number, updatedBy?: s
 
       await pool.query(
         `
-          UPDATE nexusguard_policy_state
+          UPDATE fortexa_policy_state
           SET version = $1,
               updated_at = $2::timestamptz,
               policy = $3::jsonb

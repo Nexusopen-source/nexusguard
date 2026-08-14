@@ -17,9 +17,9 @@ import type { PolicyConfig } from "@/lib/types/domain";
 const USER_ID = "simulate-route-user";
 
 function operatorCookie() {
-  process.env.NEXUSGUARD_AUTH_SECRET = "integration-test-secret";
+  process.env.FORTEXA_AUTH_SECRET = "integration-test-secret";
   const token = createSessionToken({
-    email: "operator@nexusguard.local",
+    email: "operator@fortexa.local",
     role: "operator",
     userId: USER_ID,
     expiresInSeconds: 120,

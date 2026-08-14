@@ -11,9 +11,9 @@ import type { SimulationReport } from "@/lib/decision/simulate";
 const USER_ID = "rollback-preview-route-user";
 
 function operatorCookie() {
-  process.env.NEXUSGUARD_AUTH_SECRET = "rollback-preview-test-secret";
+  process.env.FORTEXA_AUTH_SECRET = "rollback-preview-test-secret";
   const token = createSessionToken({
-    email: "operator@nexusguard.local",
+    email: "operator@fortexa.local",
     role: "operator",
     userId: USER_ID,
     expiresInSeconds: 120,

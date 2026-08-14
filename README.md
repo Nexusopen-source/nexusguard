@@ -3,12 +3,12 @@
 
 
 <p align="center">
-  <img src="public/nexusguard-logo.jpeg" alt="NexusGuard logo" width="200" />
+  <img src="public/fortexa-logo.jpeg" alt="Fortexa logo" width="200" />
 </p>
 
 <p align="center"><strong>Policy-Controlled Payment Firewall for Autonomous Agent Actions on Stellar</strong></p>
 
-NexusGuard is a **policy-controlled payment firewall for autonomous agent actions on Stellar**.
+Fortexa is a **policy-controlled payment firewall for autonomous agent actions on Stellar**.
 It sits between agent intent and economic execution, applies governance/risk checks, and keeps an auditable decision trail.
 
 This document reflects the **current implementation** in this repository.
@@ -21,7 +21,7 @@ See [docs/SCF_TRANCHE_PLAN.md](docs/SCF_TRANCHE_PLAN.md) for the Stellar Communi
 
 Agentic systems can now trigger real payments. That creates a new risk layer: high-speed model decisions can become high-impact economic actions.
 
-NexusGuard adds a control plane between intent and money movement:
+Fortexa adds a control plane between intent and money movement:
 
 - Policy checks before execution
 - Risk scoring on suspicious behavior
@@ -29,7 +29,7 @@ NexusGuard adds a control plane between intent and money movement:
 - Wallet-native signed XDR flow
 - Auditable evidence trail for every decision
 
-In short: NexusGuard is the safety layer for agentic payments.
+In short: Fortexa is the safety layer for agentic payments.
 
 ---
 
@@ -45,7 +45,7 @@ If you only read one section, read this:
 
 ### ✅ Reviewer Checklist: Wallet-Bound Payment Flow
 
-The core security premise of NexusGuard is that it **does not hold private keys or perform server-side signing.**
+The core security premise of Fortexa is that it **does not hold private keys or perform server-side signing.**
 This end-to-end flow validates that design:
 
 | Step | UI / Route | Source / Logic | Expected Signal |
@@ -59,13 +59,13 @@ This end-to-end flow validates that design:
 | **7. Explorer Link** | `/console` | [`src/components/decision-console.tsx`](src/components/decision-console.tsx) | **Success**: Clickable link to Stellar Expert confirming hash matches. |
 | **8. Audit Evidence** | `/activity`<br>`/ops` | [`GET /api/audit`](src/app/api/audit/route.ts) <br> [`src/app/activity/page.tsx`](src/app/activity/page.tsx) | **Success**: Immutable record of the original decision and execution hash. |
 
-*(Note: NexusGuard is currently built for testnet validation. Mainnet readiness requires further risk intel integrations.)*
+*(Note: Fortexa is currently built for testnet validation. Mainnet readiness requires further risk intel integrations.)*
 
 ---
 
 ## 3) 🧭 Current Product Model
 
-NexusGuard currently runs with a strict wallet-bound model:
+Fortexa currently runs with a strict wallet-bound model:
 
 1. User logs in with wallet (`/login`).
 2. Session is created with role (`operator` / `viewer`).
@@ -80,24 +80,24 @@ NexusGuard currently runs with a strict wallet-bound model:
 
 ### 4.1 Wallet-only Login
 
-NexusGuard uses a challenge-signature login flow:
+Fortexa uses a challenge-signature login flow:
 
 1. Client requests a one-time login challenge via `POST /api/auth/challenge` with the wallet public key (`G...`).
 2. The server returns a short-lived challenge message bound to that wallet.
 3. The wallet signs the challenge message (SEP-53 / Freighter `signMessage`).
 4. Client posts `publicKey`, `challengeId`, and `signature` to `POST /api/auth/login`.
-5. The server verifies the signature, enforces one-time challenge use + expiry, then issues `nexusguard_session`.
+5. The server verifies the signature, enforces one-time challenge use + expiry, then issues `fortexa_session`.
 
 Role is still resolved via allowlists:
 
-- `NEXUSGUARD_OPERATOR_WALLETS`
-- `NEXUSGUARD_VIEWER_WALLETS`
+- `FORTEXA_OPERATOR_WALLETS`
+- `FORTEXA_VIEWER_WALLETS`
 
 If both allowlists are empty, current behavior falls back to `operator` role for any valid wallet (recommended only for local/dev).
 
-Session cookie: `nexusguard_session` (HMAC-signed).
+Session cookie: `fortexa_session` (HMAC-signed).
 
-Challenge TTL: `NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS` (default `300`).
+Challenge TTL: `FORTEXA_AUTH_CHALLENGE_TTL_SECONDS` (default `300`).
 
 ### 4.2 Role Permissions
 
@@ -107,7 +107,7 @@ Challenge TTL: `NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS` (default `300`).
 ### 4.3 Login Hardening
 
 - Rate limiting
-- Brute-force lockout (`NEXUSGUARD_AUTH_MAX_ATTEMPTS`, `NEXUSGUARD_AUTH_LOCK_MINUTES`)
+- Brute-force lockout (`FORTEXA_AUTH_MAX_ATTEMPTS`, `FORTEXA_AUTH_LOCK_MINUTES`)
 
 > Note: MFA is removed from current implementation.
 
@@ -115,7 +115,7 @@ Challenge TTL: `NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS` (default `300`).
 
 ## 5) 👛 Wallet and Signing Model (Current)
 
-NexusGuard currently does **not perform server-side signing or private-key custody**.
+Fortexa currently does **not perform server-side signing or private-key custody**.
 
 - Session is wallet-bound at login.
 - Execution source wallet is derived from session identity.
@@ -150,7 +150,7 @@ Simulation is strictly read-only: it never saves the policy and never consumes u
 
 ### 6.2 Signed XDR Payment Path
 
-1. Evaluate action in `/console` with a **payment quote** (`paymentQuoteInput`: destination, optional memo, network). On `APPROVE`/`WARN`, NexusGuard stores an immutable `paymentQuote` on the audit entry.
+1. Evaluate action in `/console` with a **payment quote** (`paymentQuoteInput`: destination, optional memo, network). On `APPROVE`/`WARN`, Fortexa stores an immutable `paymentQuote` on the audit entry.
 2. Build unsigned tx: `POST /api/stellar/build-payment` with `auditEntryId` plus the same destination, amount, asset, memo, and network. The server verifies every field against the authorized quote **before** constructing XDR.
 3. `Submit Signed XDR` orchestrates signing/submission path:
    - if signed input is already present → submit directly
@@ -242,7 +242,7 @@ To clean up local developer state safely, you can use the local demo reset utili
 
 #### Guardrails
 - **Local Database Check**: Inspects `DATABASE_URL` and blocks execution if the hostname is not local (`localhost`, `127.0.0.1`, `::1`, or local UNIX sockets).
-- **Explicit Confirmation**: Rejects execution unless **both** the environment variable `NEXUSGUARD_ALLOW_LOCAL_RESET=true` and CLI flag `--yes` are provided.
+- **Explicit Confirmation**: Rejects execution unless **both** the environment variable `FORTEXA_ALLOW_LOCAL_RESET=true` and CLI flag `--yes` are provided.
 
 #### Usage
 
@@ -254,9 +254,9 @@ To clean up local developer state safely, you can use the local demo reset utili
 
 * **Apply Reset**: Execute the state reset once all guardrails are met.
   ```bash
-  NEXUSGUARD_ALLOW_LOCAL_RESET=true npm run demo:reset -- --yes
+  FORTEXA_ALLOW_LOCAL_RESET=true npm run demo:reset -- --yes
   ```
-  *(or `NEXUSGUARD_ALLOW_LOCAL_RESET=true npx tsx scripts/reset-local-demo-state.ts --yes`)*
+  *(or `FORTEXA_ALLOW_LOCAL_RESET=true npx tsx scripts/reset-local-demo-state.ts --yes`)*
 
 ---
 
@@ -272,37 +272,37 @@ STELLAR_NETWORK_PASSPHRASE=
 DATABASE_URL=
 DATABASE_SSL=false
 
-NEXUSGUARD_STORE_DIR=
+FORTEXA_STORE_DIR=
 
-NEXUSGUARD_SHARED_STATE_PATH=
+FORTEXA_SHARED_STATE_PATH=
 REDIS_URL=
 
 GROQ_API_KEY=
 GROQ_MODEL=llama-3.3-70b-versatile
 
-NEXUSGUARD_AUTH_SECRET=
-NEXUSGUARD_OPERATOR_WALLETS=
-NEXUSGUARD_VIEWER_WALLETS=
-NEXUSGUARD_AUTH_MAX_ATTEMPTS=5
-NEXUSGUARD_AUTH_LOCK_MINUTES=10
-NEXUSGUARD_JSON_BODY_MAX_BYTES=65536
+FORTEXA_AUTH_SECRET=
+FORTEXA_OPERATOR_WALLETS=
+FORTEXA_VIEWER_WALLETS=
+FORTEXA_AUTH_MAX_ATTEMPTS=5
+FORTEXA_AUTH_LOCK_MINUTES=10
+FORTEXA_JSON_BODY_MAX_BYTES=65536
 
 
 # Optional: extra keys to redact from /api/audit/export payloads.
 # Comma-separated. Matched case-insensitively. Useful for org-specific
 # internal secret names.
-# NEXUSGUARD_AUDIT_EXPORT_SENSITIVE_KEYS=internalSecret,corpApiKey
+# FORTEXA_AUDIT_EXPORT_SENSITIVE_KEYS=internalSecret,corpApiKey
 
 NEXT_PUBLIC_STELLAR_DESTINATION=
 
 # Optional: keys (comma-separated) treated as sensitive in audit export payloads.
 # See §11.1 Audit Export Redaction.
-# NEXUSGUARD_AUDIT_EXPORT_SENSITIVE_KEYS=internalSecret,corpApiKey
+# FORTEXA_AUDIT_EXPORT_SENSITIVE_KEYS=internalSecret,corpApiKey
 
 # Optional external blocklist URL for dynamic threat-intel
 # Accepts JSON array of domains or plain-text (one domain per line, # comments ignored)
 # Cached in-memory for 5 minutes; feed failures fall back silently
-NEXUSGUARD_BLOCKLIST_URL=
+FORTEXA_BLOCKLIST_URL=
 ```
 
 ---
@@ -340,7 +340,7 @@ npm run demo:scenarios
 
 ## 11) 🔌 API Surface (Reference)
 
-JSON `POST` routes that accept request bodies enforce a shared size limit before parsing (default **64 KiB**, override with `NEXUSGUARD_JSON_BODY_MAX_BYTES`). Oversized payloads receive HTTP **413** with a clear error message; malformed but small JSON still returns the route's normal validation error.
+JSON `POST` routes that accept request bodies enforce a shared size limit before parsing (default **64 KiB**, override with `FORTEXA_JSON_BODY_MAX_BYTES`). Oversized payloads receive HTTP **413** with a clear error message; malformed but small JSON still returns the route's normal validation error.
 
 ### Auth
 - `POST /api/auth/challenge`
@@ -429,13 +429,13 @@ string under a benign key (e.g. `note: "eyJ..."`) is still redacted.
 **Extending the redaction list:**
 
 The redaction config supports a per-deployment env override
-`NEXUSGUARD_AUDIT_EXPORT_SENSITIVE_KEYS` (comma-separated). Add a key to that env var
+`FORTEXA_AUDIT_EXPORT_SENSITIVE_KEYS` (comma-separated). Add a key to that env var
 and the redactor will treat it as sensitive for both JSON and CSV exports in that
 environment.
 
 ```bash
 # Example: redact any field named like an internal secret
-NEXUSGUARD_AUDIT_EXPORT_SENSITIVE_KEYS=internalSecret,corpApiKey
+FORTEXA_AUDIT_EXPORT_SENSITIVE_KEYS=internalSecret,corpApiKey
 ```
 
 The redaction logic itself is unit-tested in `src/lib/audit/redact.test.ts` —
@@ -489,14 +489,14 @@ Stores include:
 - `submit-idempotency-store`
 
 If `DATABASE_URL` is available and healthy, Postgres is used.
-Otherwise NexusGuard falls back to local JSON files:
-- local/dev default: `.nexusguard/*.json`
-- Vercel default: `/tmp/nexusguard/*.json`
+Otherwise Fortexa falls back to local JSON files:
+- local/dev default: `.fortexa/*.json`
+- Vercel default: `/tmp/fortexa/*.json`
 
 Optional overrides:
-- `NEXUSGUARD_STORE_DIR` to set file-store directory explicitly
-- `NEXUSGUARD_SHARED_STATE_PATH` for shared lockout/rate-limit state file path
-  - use an absolute path on Vercel (example: `/tmp/nexusguard/shared-security-state.json`)
+- `FORTEXA_STORE_DIR` to set file-store directory explicitly
+- `FORTEXA_SHARED_STATE_PATH` for shared lockout/rate-limit state file path
+  - use an absolute path on Vercel (example: `/tmp/fortexa/shared-security-state.json`)
 - `REDIS_URL` for multi-instance deployments (e.g. Vercel)
   - uses a Redis-backed adapter with automatic, transparent fallback to the file store if Redis is unreachable or unconfigured.
 
@@ -504,7 +504,7 @@ Optional overrides:
 
 - Migrations: `src/lib/storage/migrations.ts`
 - Runner: `src/lib/storage/db.ts`
-- Tracking table: `nexusguard_schema_migrations`
+- Tracking table: `fortexa_schema_migrations`
 - Manual run: `npm run db:migrate`
 
 ---
@@ -530,7 +530,7 @@ Optional overrides:
 4. Server-side signing remains intentionally disabled.
 5. Full end-to-end automated coverage for the complete decision-to-payment lifecycle is still limited.
 
-NexusGuard is intentionally optimized for hackathon clarity and wallet-native control, not full production deployment.
+Fortexa is intentionally optimized for hackathon clarity and wallet-native control, not full production deployment.
 
 ---
 

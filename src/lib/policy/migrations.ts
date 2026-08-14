@@ -24,7 +24,7 @@ import { policyConfigSchema } from "@/lib/validation/schemas";
  *    every Zod issue.
  *
  * Guardrails:
- * - This helper is pure: it does not read or write `.nexusguard/` policy
+ * - This helper is pure: it does not read or write `.fortexa/` policy
  *   files. Calls decide what to persist.
  * - It does not weaken `policyConfigSchema`. Migration only fills fields
  *   that are explicitly listed in `OPTIONAL_DEFAULTS`. Wrong-type or

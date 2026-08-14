@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { NextRequest } from "next/server";
 import { getSessionFromRequest } from "@/lib/auth/session";
 
-export const USER_COOKIE_KEY = "nexusguard_user_id";
+export const USER_COOKIE_KEY = "fortexa_user_id";
 
 export function getOrCreateUserId(request: NextRequest) {
   const session = getSessionFromRequest(request);

@@ -295,12 +295,12 @@ h1, h2, h3, h4 {
   animation: pulse-ring 2.5s ease-in-out infinite;
 }
 
-.nexusguard-no-scrollbar {
+.fortexa-no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-.nexusguard-no-scrollbar::-webkit-scrollbar {
+.fortexa-no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 

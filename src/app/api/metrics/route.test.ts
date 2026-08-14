@@ -6,9 +6,9 @@ import { resetMetrics } from "@/lib/observability/metrics";
 import { GET } from "@/app/api/metrics/route";
 
 function operatorCookie() {
-  process.env.NEXUSGUARD_AUTH_SECRET = "integration-test-secret";
+  process.env.FORTEXA_AUTH_SECRET = "integration-test-secret";
   const token = createSessionToken({
-    email: "operator@nexusguard.local",
+    email: "operator@fortexa.local",
     role: "operator",
     userId: "operator-user-id",
     expiresInSeconds: 120,
@@ -61,7 +61,7 @@ describe("/api/metrics route", () => {
 
     const text = await response.text();
 
-    expect(text).toContain("nexusguard_requests_total{");
+    expect(text).toContain("fortexa_requests_total{");
     expect(text).toContain('route="/api/metrics"');
     expect(text).toContain('method="GET"');
   });

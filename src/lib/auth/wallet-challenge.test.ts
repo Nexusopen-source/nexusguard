@@ -21,7 +21,7 @@ function signSep53Message(secret: string, message: string) {
 describe("wallet challenge", () => {
   afterEach(async () => {
     vi.useRealTimers();
-    delete process.env.NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS;
+    delete process.env.FORTEXA_AUTH_CHALLENGE_TTL_SECONDS;
     await resetWalletChallengeStore();
   });
 
@@ -65,7 +65,7 @@ describe("wallet challenge", () => {
 
   it("rejects expired challenges", async () => {
     vi.useFakeTimers();
-    process.env.NEXUSGUARD_AUTH_CHALLENGE_TTL_SECONDS = "60";
+    process.env.FORTEXA_AUTH_CHALLENGE_TTL_SECONDS = "60";
 
     const challenge = await createWalletChallenge(TEST_PUBLIC_KEY);
     const signature = signSep53Message(TEST_SECRET, challenge.message);
